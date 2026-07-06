@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "Cellular Automata Dynamics: Explorations in Parallel Processing"
+message: "If you use this software or book, please cite it as below."
+type: software
+authors:
+  - family-names: Espericueta
+    given-names: Rafael
+    affiliation: "Bakersfield College"
+version: "1.0.0"
+date-released: "2026-01-01"
+license: MIT
+abstract: >
+  A Python re-implementation of the software and text of the 1997 book
+  "Cellular Automata Dynamics: Explorations in Parallel Processing",
+  covering 0-, 1-, and 2-dimensional cellular automata, ecosystem
+  modeling, Wolfram's classification, and an evolutionary-game-theory
+  case study on veridical perception. Software is MIT-licensed; the book
+  text and figures are licensed CC BY 4.0.
+keywords:
+  - cellular automata
+  - dynamical systems
+  - game of life
+  - fractals
+  - complexity
+  - evolutionary game theory

@@ -1,0 +1,150 @@
+\chapter{Qualitative Classification of CA}
+\label{ch:classification}
+
+The examples of the previous chapters exhibit a striking range of
+long-term behavior.  Some settle quickly to a uniform or fixed state;
+some fall into short cycles or simple periodic patterns; some, like the
+mandalas of Chapter~4, produce intricate but ultimately self-similar
+structure; and some, like the 1-dimensional Life of
+Section~\ref{sec:life1d}, generate behavior that looks genuinely
+unpredictable.  Stephen Wolfram proposed that this diversity, across
+CA of every dimension, sorts into just four qualitative classes.
+
+\section{Wolfram's Four Classes}
+
+Starting a CA from a typical (often random) initial state and watching
+its evolution, one observes one of four broad outcomes:
+
+\begin{description}
+\item[Class 1 --- homogeneous.] The system evolves to a single uniform
+  state, independent of the initial condition.  All information about
+  the starting configuration is lost; the basin-of-attraction field
+  has a single point attractor.  (The 0-dimensional rule $f(x)=0$ of
+  Section~\ref{sec:entropy} is the simplest example.)
+\item[Class 2 --- periodic.] The system settles into stable or
+  oscillating structures, possibly many of them, each localized.
+  Changing a cell affects only a bounded region.  The additive rules
+  producing Sierpi\'nski-like patterns are essentially of this class:
+  simple, self-similar, and locally determined.
+\item[Class 3 --- chaotic.] The system produces aperiodic,
+  random-looking patterns.  A local change spreads at a finite speed to
+  affect an ever-growing region --- sensitive dependence on initial
+  conditions, the discrete analogue of chaos.  Many of the
+  higher-modulus and non-additive rules of Chapters~3 and~4 fall
+  here.
+\item[Class 4 --- complex.] The system produces localized structures
+  that move and interact in complicated ways, neither settling down
+  (as in Class~2) nor dissolving into noise (as in Class~3).  This is
+  the rarest and most interesting class.  Conway's Game of Life and the
+  particle-like 1-dimensional Life of Section~\ref{sec:life1d} are the
+  canonical examples.
+\end{description}
+
+The classes are qualitative and, in general, undecidable to determine
+from the rule alone (see below); nonetheless they capture something
+real.  Figure~\ref{fig:sixclasses} shows one elementary rule
+(Section~\ref{sec:elementary}) from each class, evolved from the same
+random initial row: Rule 160 empties the lattice (Class~1), Rule 108
+freezes into stripes and blinkers (Class~2), Rule 30 boils into noise
+(Class~3), and Rule 110 threads persistent structures through the chaos
+(Class~4).
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch6_four_classes}
+\caption{One elementary CA from each of Wolfram's four classes, all
+started from the same random row.  Time runs downward.}
+\label{fig:sixclasses}
+\end{figure}
+
+As one scans a parameter --- Wolfram's collaborator Christopher
+Langton proposed the ``$\lambda$ parameter,'' roughly the fraction of
+neighborhood configurations mapped to a nonzero state --- the typical
+behavior passes from Class~1/2 order, through a narrow Class~4 regime,
+into Class~3 chaos.  Langton dubbed this transitional regime the
+\emph{edge of chaos} and conjectured that it is precisely there that a
+CA can support the transmission, storage, and modification of
+information required for computation.
+
+\section{Computation at the Edge of Chaos}
+
+The connection to computation is not merely metaphorical.  A Class~4 CA
+has the three ingredients a computer needs: persistent structures that
+\emph{store} information (still lifes, blinkers), moving structures that
+\emph{transmit} it (gliders), and interactions that \emph{modify} it
+(glider collisions implementing logic gates).  In Conway's Life these
+ingredients suffice to build logic gates, wires, memory, and ultimately
+a universal computer; Life is \emph{Turing complete}.  The same is true
+of the 1-dimensional rule Wolfram numbered 110, proved universal by
+Matthew Cook.
+
+Figure~\ref{fig:rule110} shows Rule 110 evolving from a random initial
+state.  Against a regular striped background, localized structures ---
+the 1-dimensional analogues of Life's gliders --- travel at various
+speeds, collide, and transform one another.  It is exactly this
+repertoire of persistent, moving, interacting particles that Cook
+marshalled into a proof of universality: suitably arranged particle
+streams emulate a tag system, itself known to be Turing complete.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.9\textwidth]{ch6_rule110_detail}
+\caption{Rule 110 from a random initial state (time downward):
+particle-like structures drift across a periodic background and
+interact when they meet --- the raw material of Cook's universality
+proof.}
+\label{fig:rule110}
+\end{figure}
+
+Universality has a sharp consequence: the long-term behavior of a
+Class~4 CA is in general \emph{undecidable}.  There can be no algorithm
+that, given an arbitrary initial state, decides whether a particular
+cell ever becomes alive, whether the pattern dies out, or whether it
+grows forever --- these are instances of the halting problem.  Wolfram
+framed this as the \emph{principle of computational irreducibility}:
+for such systems there is no shortcut, no closed-form solution, that
+predicts the outcome faster than simply running the automaton
+generation by generation.  This is in sharp contrast to the additive
+CA of Sections~\ref{sec:poly1d} and~\ref{sec:poly2d}, whose polynomial
+representation \emph{is} exactly such a shortcut.  The additivity that
+made those systems tractable is the very property that keeps them out
+of Class~4.
+
+\section{Philosophical Reflections}
+
+CA raise, in unusually concrete form, some old questions.
+
+If a simple deterministic universe of cells can generate behavior that
+is unpredictable in principle --- not merely in practice --- then
+determinism and predictability come apart.  A Class~4 CA is fully
+determined by its rule and initial state, yet no observer inside or
+outside it can foresee its future without living through it.  This
+offers a tidy resolution to a version of the free-will puzzle: a
+system may be at once completely law-governed and computationally
+irreducible, so that ``what it will do'' has no answer short of its
+doing it.
+
+The recurring phenomenon of this book --- simple local rules giving
+rise to complex global order --- is precisely the phenomenon of
+\emph{emergence} catalogued in Chapter~1: the origin of life,
+morphogenesis, consciousness, cultural and economic dynamics.  CA do
+not \emph{explain} these, but they furnish a proof of concept, an
+existence theorem, that emergent complexity requires no complex or
+mysterious cause.  A one-line rule is enough.
+
+Finally, there is the tantalizing question of whether physics itself is
+at bottom a cellular automaton --- whether space, time, and matter are
+discrete and locally updated, with the smooth differential equations of
+physics only their large-scale approximation, exactly as the
+lattice-gas CA of Chapter~1 approximate fluid flow.
+
+\expand{Wolfram pressed this program at book length in \emph{A New Kind
+of Science} (2002), and the digital-physics hypothesis has since been
+pursued (with varying reception) in his 2020 Wolfram Physics Project,
+in work on quantum cellular automata, and in the ``it from bit'' and
+holographic strands of theoretical physics.  Whether the universe
+\emph{is} a cellular automaton remains open --- and may, fittingly, be
+computationally irreducible.  Cook's proof that Rule~110 is universal
+(conjectured by Wolfram in the 1980s) appeared in 2004; Langton's
+edge-of-chaos hypothesis remains influential though contested.  What is
+no longer in doubt is the book's central thesis: that cellular automata
+are a serious mathematical laboratory for the study of how complexity
+emerges from simplicity.}

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Installs the cadyn package into the Binder environment so the notebooks
+# can `import cadyn` without any sys.path juggling.
+set -e
+pip install -e .

@@ -1,0 +1,328 @@
+\chapter{Evolutionary Dynamics: A Case Study}
+\label{ch:evolution}
+
+The ecosystem of Chapter~\ref{ch:ecosystem} was built to \emph{display}
+predator/prey dynamics.  This chapter puts the same kind of machinery to
+work \emph{answering a scientific question} --- and in doing so
+introduces two ingredients the earlier model lacked: creatures that
+\emph{move}, and creatures that carry competing \emph{strategies}
+selected over evolutionary time.  The material is adapted from the
+author's later study \emph{Veridical Perception and Evolutionary
+Dynamics}; here we develop in full the compact mean-field model at its
+core, whose every claim can be checked in a few lines of Python, and
+describe the spatial simulation in prose, since it is a direct
+descendant of \texttt{cadyn.ecosystem}.
+
+\section{The Question: Does Evolution Favor Accurate Perception?}
+
+It is tempting --- and widely assumed among cognitive scientists and AI
+researchers --- that natural selection favors \emph{veridical}
+perception, perception that reports the world as it actually is.
+Accurately registering reality surely helps one survive.  Donald Hoffman
+and colleagues challenged this in a 2010 paper, \emph{Natural Selection
+and Veridical Perceptions}, arguing that selection optimizes
+\emph{fitness}, not truth, and that the two can come apart: a cheap,
+fast, systematically \emph{inaccurate} perceptual strategy can outcompete
+an accurate but costly one.
+
+The intuition is a matter of timing.  Accurate perception takes
+processing --- more neural layers, more computation, more time --- and
+neural signals are slow.  In a life-or-death moment, a bird that takes
+an extra beat to resolve exactly what it is seeing may already be in the
+cat's jaws.  The question is whether this cost is enough to select
+\emph{against} veridical perception, and if so, when.
+
+\expand{Hoffman has since developed this line into the \emph{Interface
+Theory of Perception}: the thesis that our perceptions are like a
+desktop interface --- useful, fitness-tuned icons that hide rather than
+reveal the underlying reality, much as a file icon tells you nothing
+about voltages on a disk.  His 2019 book \emph{The Case Against Reality}
+presents the ``Fitness-Beats-Truth'' theorem, which within a class of
+evolutionary-game models shows truth-tuned strategies are driven to
+extinction by fitness-tuned ones of equal complexity with probability
+approaching one as the world's complexity grows.  The CA experiments of
+this chapter are a small, concrete, spatially explicit instance of the
+same phenomenon.}
+
+\section{A Mean-Field Model of Strategy Competition}
+\label{sec:meanfield}
+
+Consider one species with several competing perceptual strategies.
+Strategy~$i$ has a fixed \emph{probability of success} $p_i$ ---
+loosely, the chance it survives the encounters of one generation --- and
+we take this $p_i$ to be its fitness.  For the running example we use
+three strategies with
+\[
+  p = (p_R,\, p_P,\, p_V) = (0.6,\ 0.75,\ 0.9),
+\]
+standing for a \textbf{R}andom (non-perceiving), a \textbf{P}robabilistic
+(sometimes-perceiving), and a \textbf{V}eridical (always-perceiving)
+strategy.  Under the natural reading in which more accurate perception
+yields more successful encounters, $V$ has the highest bare fitness.
+
+Now place the strategies on the 2-dimensional toroidal lattice of the
+previous chapters, one strategy per cell, with the eight-cell Moore
+neighborhood.  The update is deliberately simple and partly stochastic:
+at each tick a cell keeps its own strategy with probability equal to its
+success rate, and otherwise switches to the majority strategy among its
+neighbors.  A high-fitness strategy is ``sticky'' --- its holders rarely
+defect --- while low-fitness cells readily convert to whatever surrounds
+them.
+
+To analyze this, make one very reasonable mean-field assumption: that the
+probability a given neighbor is of type~$i$ equals that type's current
+population proportion $s_i$.  Writing $s(t) = (s_1, s_2, s_3)^{\mathsf T}$
+for the proportion vector, the dynamics become a matrix iteration
+\begin{equation}
+  s(t+1) = W(t)\, s(t),
+  \label{eq:meanfield}
+\end{equation}
+where the transition matrix is itself a function of the current state:
+\begin{equation}
+  W(t) =
+  \begin{bmatrix}
+    p_1 + (1-p_1)s_1 & (1-p_2)s_1 & (1-p_3)s_1\\
+    (1-p_1)s_2 & p_2 + (1-p_2)s_2 & (1-p_3)s_2\\
+    (1-p_1)s_3 & (1-p_2)s_3 & p_3 + (1-p_3)s_3
+  \end{bmatrix}.
+\end{equation}
+Each column $j$ sums to 1: a cell of type $j$ either keeps its type
+(diagonal term $p_j$) or, with probability $1-p_j$, converts to
+type~$i$ with probability $s_i$.  This is like a Markov chain, except
+that the transition matrix drifts with the population it governs.
+
+Iterating \eqref{eq:meanfield} from any interior start drives the system
+to a vertex of the simplex: the fittest strategy takes over completely
+and the rest go extinct.  Figure~\ref{fig:mf-runs} shows this for the
+equal start $(\tfrac13,\tfrac13,\tfrac13)$ and the uneven start
+$(0.5, 0.3, 0.2)$; in both, $V$ wins.  Notably, $V$ wins the second race
+\emph{even though it starts as the smallest population} --- higher
+fitness, not a head start, decides the outcome.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch7_meanfield_runs}
+\caption{The mean-field strategy dynamics from two initial conditions.
+The veridical strategy $V$ ($p=0.9$) drives the random and
+probabilistic strategies to extinction, even when (right) it begins as
+the least common.}
+\label{fig:mf-runs}
+\end{figure}
+
+The three-strategy state lives on the 2-simplex --- a triangle whose
+corners are the pure strategies and whose interior is every mixture.
+Figure~\ref{fig:mf-simplex} plots trajectories from many random starts;
+every one flows to the $V$ corner.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.7\textwidth]{ch7_simplex}
+\caption{Trajectories of the proportion vector on the strategy simplex.
+Circles mark starts, stars mark the shared destination: the
+veridical vertex.}
+\label{fig:mf-simplex}
+\end{figure}
+
+\subsection*{A Lemma, and a coordinate-free form}
+
+The matrix $W(t)$ is unwieldy, but the map it defines has a clean
+closed form.  Let ``$\circ$'' denote the elementwise (Hadamard) product,
+$\vec 1$ the all-ones vector, and $I$ the identity.
+
+\begin{lemma}
+The update $s(t+1) = W(t)\,s(t)$ can be written, in any dimension, as
+\begin{equation}
+  s(t+1) = \Bigl(\, p \circ I \;+\; \vec 1\,\bigl((\vec 1 - p)\circ s\bigr)^{\mathsf T}\Bigr)\circ s,
+  \label{eq:lemma}
+\end{equation}
+equivalently and more concretely as
+\begin{equation}
+  s(t+1) \;=\; p \circ s \;+\; s\,\bigl\langle \vec 1 - p,\ s\bigr\rangle,
+  \label{eq:lemma-scalar}
+\end{equation}
+where $\langle\,\cdot\,,\cdot\,\rangle$ is the ordinary dot product.
+\end{lemma}
+
+\begin{proof}
+Suppressing the $t$-dependence and writing $q_j = 1-p_j$, the
+$i$\textsuperscript{th} component of $W s$ is
+\[
+  (Ws)_i = \Bigl(p_i + q_i s_i\Bigr)s_i
+           + \sum_{j\neq i} q_j s_i s_j
+         = p_i s_i + s_i \sum_{j} q_j s_j
+         = p_i s_i + s_i\,\langle \vec 1 - p,\ s\rangle,
+\]
+which is exactly \eqref{eq:lemma-scalar}; expression \eqref{eq:lemma}
+is the same computation arranged as a Hadamard product of the bracketed
+matrix (diagonal $p_i$, every row equal to $((\vec 1 - p)\circ s)^{\mathsf T}$)
+with the column $s$, followed by the row sum.  Nothing in the derivation
+used $n=3$, so the form is valid in every dimension.
+\end{proof}
+
+The scalar form \eqref{eq:lemma-scalar} is illuminating: each generation
+scales strategy~$i$ by its own fitness $p_i$ and then adds back a share
+$s_i$ of the total ``defection mass'' $\langle \vec1 - p, s\rangle$.
+Because the surviving-and-switching bookkeeping is exact, the true map
+conserves $\sum_i s_i$; in floating-point iteration one renormalizes each
+step, which is what ``population \emph{proportions}'' means anyway.  The
+module \texttt{cadyn.evolution} provides all three formulations and a
+routine \texttt{verify\_lemma} confirming they agree --- for the worked
+example and for hundreds of random cases in dimensions 2 through 8.
+
+\subsection*{An empirical theorem}
+
+Simulation makes the following extremely plausible; a formal proof
+eluded the original study and we state it as the paper did.
+
+\begin{theorem}[empirical]
+Let $s(0)$ be any interior point of the probability simplex
+($s_i(0) > 0$ for all $i$), and suppose the fitness vector has a unique
+maximum, $p_k > p_j$ for all $j \neq k$.  Then $s(t) \to e_k$ as
+$t\to\infty$, where $e_k$ is the standard basis vector with a $1$ in
+position $k$.
+\end{theorem}
+
+The routine \texttt{cadyn.evolution.dominant\_strategy\_wins} tests one
+initial condition; across 500 random starts in three dimensions, and 100
+each in dimensions 4, 6, and 10, the unique fittest strategy won every
+time --- somewhat stronger evidence than the original paper marshalled.
+A natural next step, which the original study flagged as future work, is
+to find a replicator system approximating this map and prove convergence
+analytically; the replicator equation is the standard bridge from such
+population updates to a dynamical system with known convergence theory.
+
+The mean-field model can also \emph{preview} the chapter's central
+reversal.  Nothing in it explains why $V$ should be fittest --- that is
+an input.  If accurate perception carries a computational cost, we can
+model that cost crudely by lowering $V$'s effective success rate.
+Figure~\ref{fig:mf-penalty} repeats the equal-start race with $V$'s
+fitness cut from $0.9$ to $0.55$, below $P$'s $0.75$: now the
+probabilistic strategy sweeps the board and veridical perception is the
+one driven extinct.  The mean-field model thus contains both outcomes;
+which one obtains depends entirely on whether accurate perception is
+worth its price.  The spatial model of the next section supplies that
+price from first principles, as a cost in \emph{time}.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch7_penalty}
+\caption{Left: with no cost, the veridical strategy wins (as before).
+Right: charging veridical perception a computational cost --- modeled
+here by lowering its effective fitness below the probabilistic
+strategy's --- reverses the outcome, and $V$ goes extinct.}
+\label{fig:mf-penalty}
+\end{figure}
+
+\section{The Spatial Experiment: Movement, Fitness, and a Time Penalty}
+\label{sec:spatial-evolution}
+
+The mean-field model already vindicates Hoffman's logic, but only as
+abstractly as his own argument: it \emph{assumes} $V$ has the highest
+fitness and then shows the fittest wins.  It says nothing about
+\emph{why} veridical perception might fail to be fittest.  For that we
+need a model where perception actually costs something, and the natural
+vehicle is a spatial ecosystem in the manner of
+Chapter~\ref{ch:ecosystem} --- extended, crucially, with
+\emph{movement}.
+
+\subsection*{What is added to the Chapter~5 ecosystem}
+
+The second experiment keeps the toroidal lattice, the plant/prey/predator
+roles, the stochastic asynchronous updates, and the population and
+phase-portrait diagnostics of Chapter~\ref{ch:ecosystem}, and layers on:
+
+\begin{itemize}
+\item \textbf{Movement.} Creatures (birds and cats) take random walks: a
+  creature moves by copying its state into a vacant neighboring cell and
+  vacating its own.  Eating is movement --- a bird eats a plant by
+  stepping onto it; a cat eats a bird by pouncing onto its cell.  (The
+  author notes that mobile creatures in an evolutionary-game CA appear
+  to be novel, tracing the idea to his own 1997 work --- the very book
+  this volume revises.)
+\item \textbf{Individual fitness, birth, and death.} Each creature
+  carries a fitness counter: eating raises it, each idle tick lowers it,
+  zero means starvation, and crossing a threshold triggers haploid
+  reproduction onto a neighboring empty or plant cell.  Unlike the
+  Chapter~5 model, which tracked only population \emph{counts}, here
+  fitness is an attribute of each individual.
+\item \textbf{Perceptual strategies.} Every bird and every cat carries
+  one of three strategies --- $R$ (random walk, no perception), $V$
+  (veridical: birds flee perceived cats, cats pounce on perceived
+  birds), and $P$ (do $V$ with probability $\rho$, else $R$).  This is
+  the mean-field model's $R/P/V$ competition, now embodied in moving,
+  eating, breeding animals.
+\end{itemize}
+
+Including plants alongside prey and predators yields a
+rock-paper-scissors (``Rochambeau'') structure, expressed --- as the
+author wryly notes --- through negations: no plants starves the birds,
+no birds starves the cats, and no cats lets the birds strip the plants.
+That cyclic non-transitivity may be exactly what underlies the dynamic
+stability of a broad range of Lotka--Volterra systems; flattening it by
+omitting plants obscures the mechanism.
+
+\subsection*{The result, and the reversal}
+
+Run without any timing asymmetry, the spatial model echoes the
+mean-field one: the veridical strategies drive the others to extinction,
+first the random strategies and then the probabilistic ones, for both
+birds and cats.  The surviving bird/cat subsystem settles into the noisy,
+damped Lotka--Volterra oscillation familiar from
+Chapter~\ref{ch:ecosystem}, spiralling toward an interior Nash
+equilibrium; in the reported run the normalized bird/cat proportions
+converge near $[0.738,\, 0.262]$ with strikingly small steady-state
+variance, and an FFT of the population series reveals a dominant cycle of
+about 18 generations.  So far, ``veridical perception wins again.''
+
+The decisive experiment introduces the cost of perception as a cost in
+\emph{time}.  In the baseline simulation, cats happen to move first ---
+they perceive and act before birds do.  To penalize veridical
+perceivers for the processing their accuracy requires, the veridical
+creatures are made to move \emph{last}: they pay for their better
+picture of the world with a beat of delay, exactly the slow-neuron cost
+of the opening question.  Under this single change the balance shifts.
+The probabilistic strategy, now no longer strictly dominated, competes
+with the veridical one on even terms and is no longer driven to
+extinction; a slow-but-accurate strategy can be beaten by a
+faster, less accurate one.  A pair of thought experiments makes the
+mechanism vivid: a bird that resolves ``cat'' a moment too late is
+already caught, and a cat that resolves ``bird'' too late goes hungry
+--- and repeated, either lag is lethal to the strategy that carries it.
+
+\expand{This is the CA analogue of Hoffman's claim and, more broadly, a
+lesson machine learning has relearned: depth is not free.  Because
+neural signals are slow, biological brains run \emph{shallow} networks
+compared with the very deep ones routinely trained today; a perceptual
+system optimized purely for accuracy, with no regard to latency, is not
+the system evolution builds.  ``To have survival value, perceptions must
+be fast'' --- a constraint now visible in real-time robotics and
+edge-inference, where a slightly-worse-but-faster model routinely beats a
+slightly-better-but-slower one.}
+
+\section{An Emergent Curiosity: Fitness Collapse Before Extinction}
+
+One observation from the spatial runs deserves flagging because it was
+not sought and is not obviously an artifact.  Tracking the \emph{mean
+fitness} of each sub-population over time, the author found that a
+strategy's mean fitness tends to \emph{oscillate wildly in the moments
+before that strategy goes extinct}, and that the overall mean fitness of
+the whole ecosystem \emph{steps down} with each extinction event.  Both
+effects invite the question the original study left open: are they
+quirks of this particular CA, or do they echo something real ---
+critical-slowing-down and variance-inflation of the kind studied as
+\emph{early-warning signals} of tipping points in real ecosystems?  The
+CA is cheap enough to make this a natural thing to probe systematically,
+and the tools of Chapter~\ref{ch:ecosystem} (population and phase-space
+diagnostics) apply directly.
+
+\section{Reflection}
+
+Two models, one abstract and one spatially explicit, independently
+support Hoffman's conclusion: veridical perception is favored by
+selection \emph{until} its computational cost is reckoned, after which a
+faster, less accurate strategy can win.  The mean-field model is fully
+reproduced and checked in \texttt{cadyn.evolution}; the spatial model,
+being a direct extension of \texttt{cadyn.ecosystem} with movement and
+per-individual strategies, is left as a described experiment and an
+invitation.  It closes a loop with Chapter~\ref{ch:ecosystem}: the
+predator/prey CA that began as a way to \emph{watch} population dynamics
+turns out, with movement and strategies added, to be a laboratory for one
+of the sharper questions in the science of the mind --- whether the world
+we perceive is the world as it is, or merely the world as it pays to see.

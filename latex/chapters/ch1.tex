@@ -1,0 +1,160 @@
+\chapter{What Are Cellular Automata?}
+
+\section{Introduction}
+
+Back in 1971 an article appeared in the Mathematical Games section of
+\emph{Scientific American} describing the Game of Life, created by
+Cambridge mathematician John Conway.\footnote{Martin Gardner's column
+actually introduced Life in October 1970; follow-up columns appeared
+through 1971.}  Conway had been looking for a simple discrete dynamical
+system capable of self-replication.  Soon after the article appeared,
+computers the world over began devoting unprecedented amounts of time
+to exploring Life's ramifications, often to the chagrin of computing
+facility administrators.
+
+Conway's Game of Life is one of an infinite class of mathematical
+systems known as \emph{cellular automata} (CA).  Creating a CA is
+creating a simple universe, with its own space-time structure and its
+own laws of physics.  One sets up the initial state (perhaps using
+randomization), defines the laws of physics, starts time's progression,
+and beholds the subsequent evolution of the universe.  When playing God
+in this way, one is often surprised and delighted by what ensues.
+
+CA were first introduced by John von Neumann and Stanis\l{}aw Ulam in
+the 1940s, who called them \emph{cellular spaces}; they had been
+looking for simple mathematical models of biological systems,
+self-reproduction in particular.  CA have since served as mathematical
+models of phenomena from remarkably diverse disciplines.  Any system
+analyzable in terms of large numbers of discrete elements with local
+interactions is amenable to being modeled as a CA, and in such systems
+simple interaction rules between components tend to give rise to very
+complex \emph{emergent} behavior.
+
+CA can yield discrete approximations to the solutions of systems of
+differential equations, in terms of which much of the macroscopic
+physics of our world is expressed.  CA models have been applied to
+fluid dynamics, plasma physics, chemical systems, the growth of
+dendritic crystals, economics, two-directional traffic flow, image
+processing and pattern recognition, parallel processing, random number
+generation, and even the evolution of spiral galaxies.  Biological
+applications include the functioning of groups of cells, heart
+fibrillation, neural networks, and ecosystems.
+
+The module \texttt{cadyn.ecosystem} uses a CA to simulate a
+three-species ecosystem, capturing the dynamics typical of such
+systems.  Mathematicians have traditionally used generalizations of the
+Volterra--Lotka differential equations to model the population dynamics
+of predator/prey systems.  CA provide a more intuitive model ---
+indeed, a CA models the ecosystem itself, not merely the population
+counts of the species.
+
+CA also provide a useful mathematical model of massively parallel
+multiprocessor systems.  Each cell may be considered a processor, its
+finitely many states the states of the processor, and its neighborhood
+the set of directly connected processors.  (Replace ``processor'' with
+``neuron'' and the same description covers a neural network.)  How to
+get such a system to perform useful computation, making optimal use of
+all that parallel computing power, remains a central problem of
+computer science.  CA experiments have provided much-needed insight
+into how simple local interactive dynamics give rise to complex
+emergent global behavior.
+
+Similar questions --- simple local rules yielding complex emergent
+global behavior --- are central to many fields.  Some important
+unanswered questions of this type:
+
+\begin{itemize}
+\item How did life emerge from the interactions of chemicals in the
+  pre-biotic conditions of the primordial earth?
+\item How does morphogenesis proceed in a developing embryo?  How do
+  the relatively simple, chemically modulated interactions of
+  undifferentiated cells result in a globally orchestrated complex of
+  specialized organs and tissues?
+\item How does consciousness emerge from the relatively simple
+  interactions of billions of neurons?
+\item How does cultural evolution unfold from the interaction of its
+  underlying milieu of concepts and beliefs?
+\item How do relatively simple economic behavior patterns of
+  individuals give rise to the dynamics of a whole economy?
+\end{itemize}
+
+CA computer experiments and simulations provide insight into such
+problems, and a conceptual framework in which theoretical progress may
+be made on the phenomenon of emergence in general.  The Santa Fe
+Institute was formed to address just these types of problems from a
+variety of fields, and CA remain a major focus of research on complex
+systems.
+
+As single-processor computer systems yield to massively parallel ones,
+simulation of CA becomes ever easier, and practical applications
+abound.  The inherently parallel structure of CA makes them
+particularly suited to implementation on multiprocessor hardware.  The
+MIT Physics of Computation group developed a cellular automata machine
+(CAM) specially designed to run CA programs, successfully applied to
+problems in physics and in medical imaging.
+
+\expand{The trajectory sketched above has largely come to pass.  The
+GPUs that now power scientific computing (and machine learning) are
+precisely the massively parallel, locally connected hardware for which
+CA are natively suited; a modest laptop today evolves in seconds the
+$500\times500$, 250-generation experiments that in 1997 required an
+overnight run.  The lattice-gas methods mentioned above matured into
+the lattice Boltzmann methods now standard in computational fluid
+dynamics.  Toffoli and Margolus's CAM machines were retired, but their
+ideas about reversible, physics-like computation live on in research on
+energy-efficient and quantum computing.  And in 2002 Stephen Wolfram's
+\emph{A New Kind of Science} brought CA to a wide audience; see
+Chapter~\ref{ch:classification}.  The ecosystem strand, meanwhile, grew
+a second act: Chapter~\ref{ch:evolution} adds \emph{movement} and
+competing \emph{strategies} to the predator/prey CA and turns it on a
+question from the science of mind --- whether evolution favors accurate
+perception.}
+
+\section{Basic Definitions}
+
+Cellular automata are a class of discrete dynamical systems consisting
+of an array of cells of some dimension $n$.  Each cell is in one of $k$
+distinct states at each tick of a global clock, and at each tick every
+cell may change state as determined by the \emph{transition rules} of
+the particular CA.  The transition rules prescribe how a cell changes
+state as a function of its current state and the states of its
+\emph{neighbors}; which cells constitute the neighborhood of a given
+cell must be specified explicitly.
+
+More precisely, a CA consists of:
+
+\begin{enumerate}
+\item \textbf{A lattice of cells}, each of which is in one of a finite
+  number of states at each discrete time.  The lattice may be of any
+  dimension and is in principle of infinite extent: a 1-dimensional CA
+  has a cell at each integer point of the real line, a 2-dimensional CA
+  a cell at each point of the plane with integer coordinates, and so
+  on.  In practice the infinite lattice is made effectively finite,
+  usually by imposing a \emph{wrap-around} (periodic) condition: in one
+  dimension the line becomes a circle, in two dimensions the plane
+  becomes a torus.
+\item \textbf{A neighborhood} defined for each cell.  For
+  \emph{homogeneous} CA the same relative neighborhood is used for
+  every cell.
+\item \textbf{Transition rules} specifying the dynamics: each cell
+  passes from its current state to its next state based on its current
+  state and those of its neighbors, all cells transforming
+  synchronously at the discrete ticks of the clock.
+\end{enumerate}
+
+Let $n$ be the dimension of the lattice, $k$ the number of states, $T$
+the transition-rule function, $C_t(i_1,\dots,i_n)$ the state of the
+cell at position $(i_1,\dots,i_n)$ at time $t$, and
+$N_t(i_1,\dots,i_n)$ the tuple of values (in a fixed order) of the
+cells neighboring that position at time $t$.  Then the dynamics of the
+CA are completely specified by the initial states $C_0$ of all cells
+together with the recursion
+\begin{equation}
+  C_{t+1}(i_1,\dots,i_n) \;=\; T\bigl(N_t(i_1,\dots,i_n)\bigr).
+  \label{eq:ca-recursion}
+\end{equation}
+
+As is usual with formal definitions, this is best understood through
+simple examples.  The next chapter examines the case in which the
+lattice has dimension zero --- there is only one cell!  We shall see
+that even this extremely simple case holds some surprises.

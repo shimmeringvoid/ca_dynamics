@@ -1,0 +1,8 @@
+# Binder environment for the chapter notebooks.
+# mybinder.org reads this file, then runs .binder/postBuild to install
+# the cadyn package itself in editable mode.
+numpy>=1.22
+scipy>=1.8
+matplotlib>=3.5
+networkx>=2.6
+jupyterlab>=4

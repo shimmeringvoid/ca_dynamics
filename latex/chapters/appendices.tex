@@ -1,0 +1,159 @@
+\chapter{Modular Arithmetic}
+\label{app:modular}
+
+Modular arithmetic (sometimes ``clock arithmetic'') is ordinary
+integer arithmetic --- addition and multiplication --- with one extra
+step: after each operation, divide by the modulus and report only the
+remainder.  For example, with modulus 5,
+\[
+  3 + 4 = 7 \equiv 2 \pmod 5,
+\]
+read ``three plus four is congruent to two modulo 5,'' since 5 goes
+into 7 once with remainder 2.  Any integer reduces modulo 5 to one of
+$0,1,2,3,4$: if positive, take the remainder on division by 5; if
+negative, add 5 repeatedly until the result lies in that range.  Since
+$5 \equiv 0 \pmod 5$, adding 5 never changes a result mod 5.  The
+additive inverse of 1 is $-1$, and $-1+5 = 4$, so $-1 \equiv 4
+\pmod5$.  In general
+\[
+  n \equiv 0 \pmod n, \qquad -1 \equiv n-1 \pmod n .
+\]
+
+Modulo-2 arithmetic has only two digits, $0$ and $1$, and reduces to
+three rules (writing $=$ for congruence mod 2):
+\[
+  0 + 0 = 0, \qquad 0 + 1 = 1, \qquad 1 + 1 = 0 .
+\]
+These are exactly the rules of the ``exclusive or'' operation of
+Boolean algebra, of central importance in the design of digital
+circuits.  In Python, the operator is spelled \texttt{\%}
+(\texttt{7 \% 5} evaluates to \texttt{2}), and it is applied
+element-wise by NumPy: \texttt{np.mod(array, k)}.
+
+\chapter{Pascal's Triangle}
+\label{app:pascal}
+
+The simplest construction of Pascal's triangle: start with a single 1;
+each subsequent row is obtained by adding adjacent entries of the row
+above (treating missing entries as 0):
+\[
+\begin{array}{ccccccccc}
+ & & & & 1\\
+ & & & 1 & & 1\\
+ & & 1 & & 2 & & 1\\
+ & 1 & & 3 & & 3 & & 1\\
+1 & & 4 & & 6 & & 4 & & 1
+\end{array}
+\]
+The entries are the \emph{binomial coefficients}, arising in the
+expansion
+\[
+  (a+b)^n = \sum_{k=0}^{n} \binom{n}{k} a^k b^{n-k},
+  \qquad \binom{n}{k} = \frac{n!}{k!\,(n-k)!},
+\]
+where $\binom{n}{k}$ sits at position $k$ of row $n$ (numbering rows
+and positions from zero).
+
+Reduced modulo 2, Pascal's triangle becomes an intricate pattern of
+ones and zeros --- recognizable as none other than Sierpi\'nski's
+gasket (Figure~\ref{fig:pascal2}).  This is exactly the pattern
+produced by the additive CA with kernel $[1\;0\;1]$ modulo 2
+(Section~\ref{sec:kernel101}), as the polynomial analysis of
+Section~\ref{sec:poly1d} makes precise: the coefficients
+$\binom{t}{i}$ appear directly in the closed form for that rule.
+Computing $2^n$ rows of Pascal's triangle mod 2 yields a figure
+resembling the approximation $S_n$ to the gasket
+(Appendix~\ref{app:sierpinski}).
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.7\textwidth]{appB_pascal_mod2}
+\caption{Pascal's triangle modulo 2, 128 rows --- successive
+approximations to Sierpi\'nski's gasket.}
+\label{fig:pascal2}
+\end{figure}
+
+\chapter{Geometric Construction of Sierpi\'nski's Gasket}
+\label{app:sierpinski}
+
+In 1915 Wac\l{}aw Sierpi\'nski described the following geometric
+construction of the fractal triangle now bearing his name.  Begin with
+a filled equilateral triangle $S_0$.  To construct $S_1$, remove the
+inverted middle triangle whose sides have half the length of the
+original's.  To construct $S_2$, apply the same operation to each of
+the three triangles composing $S_1$; to construct $S_3$, apply it to
+each of the nine triangles composing $S_2$; and so on
+(Figure~\ref{fig:sierp-construct}).
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{appC_sierpinski_construction}
+\caption{The first four approximations $S_0, S_1, S_2, S_3$ to
+Sierpi\'nski's gasket.}
+\label{fig:sierp-construct}
+\end{figure}
+
+Continuing indefinitely yields a sequence $S_0, S_1, S_2, \dots$ of
+better and better approximations; the gasket itself is the limit.  It
+has zero area and Hausdorff dimension $\log 3 / \log 2 \approx 1.585$.
+The CA with rule $[1\;0\;1]$ modulo 2, evolved for $2^{\,n+1}$
+generations, produces a figure resembling $S_n$; the 256-generation run
+of Figure~\ref{fig:sierp2} looks like $S_7$.  That three quite
+different constructions --- a geometric removal process, Pascal's
+triangle mod 2, and an additive CA --- converge on the same figure is a
+small marvel worth pausing over.
+
+\chapter{The Euler Totient Function}
+\label{app:totient}
+
+Euler's totient function $\varphi$ features prominently in number
+theory.  For a positive integer $n$,
+\[
+  \varphi(n) = \text{the count of integers in } \{1,\dots,n\}
+  \text{ that are relatively prime to } n,
+\]
+where two integers are \emph{relatively prime} if their only common
+positive divisor is 1.  Thus 6 and 10 are not relatively prime (both
+divisible by 2), while 9 and 10 are.  By convention $\varphi(1)=1$.
+For a prime $p$ every smaller positive integer is coprime to it, so
+\[
+  \varphi(p) = p - 1 ,
+\]
+placing $\varphi$'s local maxima at the primes and its local minima at
+integers with many factors (Figure~\ref{fig:totient-plot}).  More
+generally, $\varphi$ is multiplicative and
+$\varphi(p^a) = p^a - p^{a-1}$, giving the product formula
+$\varphi(n) = n\prod_{p \mid n}(1 - 1/p)$.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.85\textwidth]{appD_totient}
+\caption{Euler's totient function for $n < 200$.  Primes lie on the
+upper line $\varphi(n)=n-1$.}
+\label{fig:totient-plot}
+\end{figure}
+
+A short table:
+
+\begin{center}
+\begin{tabular}{r|l|r}
+\toprule
+$n$ & integers coprime to $n$ & $\varphi(n)$\\
+\midrule
+ 2 & 1                         & 1\\
+ 3 & 1, 2                      & 2\\
+ 4 & 1, 3                      & 2\\
+ 5 & 1, 2, 3, 4                & 4\\
+ 6 & 1, 5                      & 2\\
+ 7 & 1, 2, 3, 4, 5, 6          & 6\\
+ 8 & 1, 3, 5, 7                & 4\\
+ 9 & 1, 2, 4, 5, 7, 8          & 6\\
+10 & 1, 3, 7, 9                & 4\\
+12 & 1, 5, 7, 11               & 4\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The module \texttt{cadyn.numtheory} computes $\varphi$ both singly
+(\texttt{totient(n)}) and as a sieve over a range
+(\texttt{totient\_table(limit)}); the latter is used by the
+Euler-totient CA rule of Section~\ref{sec:totient}, with the convention
+$\varphi(0)=0$ so that a dead (zero) cell contributes nothing to its
+neighbors' sums.

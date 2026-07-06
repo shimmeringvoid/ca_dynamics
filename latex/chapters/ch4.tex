@@ -1,0 +1,359 @@
+\chapter{2-Dimensional Cellular Automata}
+
+\section{Preliminaries}
+
+A 2-dimensional lattice is an array of cells tiling an infinite planar
+surface, each taking a value from a finite set at each tick of the
+clock; the state at time $t$ is the doubly infinite array
+$C^{(t)} = \bigl[\,C^{(t)}_{ij}\,\bigr]$.  As before we consider only
+periodic boundary conditions, but now the wrap-around occurs in two
+directions: right wraps to left and bottom wraps to top.  Fixing $n$
+rows and $m$ columns, the state becomes the finite array
+\begin{equation}
+  C^{(t)} =
+  \begin{bmatrix}
+    C^{(t)}_{0,0} & C^{(t)}_{0,1} & \cdots & C^{(t)}_{0,m-1}\\
+    C^{(t)}_{1,0} & C^{(t)}_{1,1} & \cdots & C^{(t)}_{1,m-1}\\
+    \vdots & \vdots & \ddots & \vdots\\
+    C^{(t)}_{n-1,0} & C^{(t)}_{n-1,1} & \cdots & C^{(t)}_{n-1,m-1}
+  \end{bmatrix}.
+\end{equation}
+One way to visualize the periodic boundary condition: join the top and
+bottom of the array to form a tube, then join the ends of the tube.
+Our lattice has the topology of a \emph{torus}.  Equivalently, tile the
+infinite plane with copies of the $n\times m$ array, requiring
+\begin{equation}
+  a \equiv b \pmod n,\ \ c \equiv d \pmod m
+  \;\Longrightarrow\; C^{(t)}_{a,c} = C^{(t)}_{b,d}:
+\end{equation}
+all arithmetic on the first index is done modulo $n$, on the second
+modulo $m$.
+
+As before, we consider homogeneous CA (the same relative neighborhood
+for every cell), let $k$ denote the number of states, identified with
+$0,1,\dots,k-1$, and compute cell values modulo $k$.  The number of
+possible states of such a CA is $k^{nm}$; in
+Section~\ref{sec:vonneumann}, with $k=256$
+and $n=m=500$, the number of states is $256^{500\cdot500} >
+10^{602059}$.
+
+Before the examples we discuss the generalization of the convolution
+kernels found so useful in the previous chapter.  These 2-dimensional
+kernels are used extensively in image processing.
+
+\section{2-Dimensional Convolution Kernels}
+
+One of the most frequently used procedures in image processing is
+filtering an image by convolving it with a 2-dimensional kernel.  The
+procedure closely parallels the 1-dimensional case.  For example, the
+kernel
+\[
+  \begin{bmatrix*}[r] 0 & -1 & 0\\ -1 & 4 & -1\\ 0 & -1 & 0
+  \end{bmatrix*}
+\]
+applied to a digital image serves as an \emph{edge extractor}, since it
+maps homogeneous regions to zero.  Center the kernel over each pixel
+and form the multiply-and-add.  For the image fragment
+\[
+  \begin{bmatrix} 1 & 2 & 3\\ 5 & \mathbf{6} & 7\\ 8 & 9 & 1
+  \end{bmatrix}
+\]
+the output value at the central pixel (input value 6) is
+\[
+  0\cdot1 + (-1)\cdot2 + 0\cdot3
+  + (-1)\cdot5 + 4\cdot6 + (-1)\cdot7
+  + 0\cdot8 + (-1)\cdot9 + 0\cdot1 = 1 .
+\]
+In general, for an $N\times M$ image $x_{ij}$ and a
+$(2Q\!-\!1)\times(2Q\!-\!1)$ kernel $k_{fh}$, the output with periodic
+boundaries is
+\begin{equation}
+  y_{ij} \;=\; \sum_{f=1-Q}^{Q-1}\ \sum_{h=1-Q}^{Q-1}
+     k_{fh}\; x_{(i+f)\bmod N,\ (j+h)\bmod M}.
+\end{equation}
+Additive 2-dimensional CA are amenable to detailed mathematical
+analysis and admit a polynomial representation similar to the
+1-dimensional case, but with two variables
+(Section~\ref{sec:poly2d}).
+
+\section{Interlude: The Same Kernels as Image Filters}
+\label{sec:imageproc}
+
+Before returning to CA proper it is worth pausing to actually
+\emph{see} the image-processing use of this machinery, since the two
+computations are literally identical: one generation of an additive CA
+is one convolution pass over an image, minus the mod-$k$ reduction.
+Figure~\ref{fig:imageproc} applies two kernels from this chapter to a
+synthetic grayscale test image (a gradient background bearing a disk, a
+square, and a triangle, with mild noise).
+
+The center panel shows a single pass of the edge-extracting Laplacian
+kernel introduced in the previous section: homogeneous regions ---
+where a pixel equals the average
+of its four neighbors --- are mapped to zero, so only the boundaries of
+the shapes survive.  The right panel shows six iterated passes of the
+smoothing kernel
+\[
+  \tfrac{1}{16}
+  \begin{bmatrix} 1&2&1\\ 2&4&2\\ 1&2&1 \end{bmatrix},
+\]
+the outer product $[1\;2\;1]^{\mathsf T}[1\;2\;1]$ of the very kernel
+used in the worked example of Section~3.1, normalized to sum to 1.
+Iterating a smoothing convolution is running a CA whose long-run
+behavior is the diffusion (heat) equation --- a first concrete instance
+of the claim of Chapter~1 that CA yield discrete approximations to
+differential equations.  Where an image processor stops after one or a
+few passes, a CA keeps going; the difference between the two fields is,
+as promised, one of intent rather than mechanism.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch4_image_processing}
+\caption{The kernels of this chapter doing their day job.  Left: a
+synthetic test image.  Center: one pass of the Laplacian
+edge-extraction kernel (absolute value shown).  Right: six passes of
+the normalized smoothing kernel --- iterated convolution as discrete
+diffusion.}
+\label{fig:imageproc}
+\end{figure}
+
+\section{Example: $k=256$, $n=m=500$, the von Neumann kernel}
+\label{sec:vonneumann}
+
+For this example the state at generation $t$ is a $500\times500$ array
+with entries in $\{0,\dots,255\}$; wrap-around is imposed by modulo-500
+arithmetic on the indices.  The neighborhood of a cell is the cell
+itself with its left, right, upper, and lower neighbors, and the rule
+is the neighborhood sum modulo 256:
+\begin{equation}
+  C^{(t+1)}_{ij} = C^{(t)}_{i,j-1} + C^{(t)}_{i-1,j} + C^{(t)}_{ij}
+  + C^{(t)}_{i,j+1} + C^{(t)}_{i+1,j} \pmod{256},
+\end{equation}
+compactly expressed by the kernel
+\begin{equation}
+  \begin{bmatrix} 0&1&0\\ 1&1&1\\ 0&1&0 \end{bmatrix}.
+\end{equation}
+We start from the simplest initial state: all cells zero except one
+cell of value 1.  In the following images black represents zero and
+colors the other 255 states.
+
+From this simple seed an ever-growing mandala of intricate complexity
+and symmetry unfolds (growing up to the limiting $500\times500$
+dimensions of the space).  Figure~\ref{fig:vn} shows the seed after 100
+and after 250 generations.  Figure~\ref{fig:vnseeds} shows the descent
+of a different initial state: 256 seeds with values $0,\dots,255$
+arranged on a grid, after 13 generations --- each seed the germ of its
+own distinct mandala.  (The seed of value 0 is a perfectly valid seed;
+it simply proves infertile, leaving a conspicuous gap in the garden.)
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.48\textwidth]{ch4_vonneumann_gen100}\;
+\includegraphics[width=0.48\textwidth]{ch4_vonneumann_gen250}
+\caption{The von Neumann--kernel CA grown from a single seed:
+generation 100 (detail, left) and generation 250 (right).}
+\label{fig:vn}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.7\textwidth]{ch4_vonneumann_seeds_gen13}
+\caption{Generation 13 from an initial state of 256 seeds with values
+$0,\dots,255$; the value-0 seed, though valid, is infertile.}
+\label{fig:vnseeds}
+\end{figure}
+
+\section{Example: $k=256$, $n=m=500$, a signed kernel}
+\label{sec:kernel43}
+
+With the same lattice and state count as the previous example, we now
+take the neighborhood to be the cell together with its eight nearest
+neighbors, and the transition rule given by the kernel
+\begin{equation}
+  \begin{bmatrix*}[r] -1 & 2 & -1\\ 2 & -4 & 2\\ -1 & 2 & -1
+  \end{bmatrix*},
+\end{equation}
+that is,
+\begin{equation}
+\begin{aligned}
+  C^{(t+1)}_{ij} ={}& -C^{(t)}_{i-1,j-1} + 2C^{(t)}_{i-1,j}
+                     - C^{(t)}_{i-1,j+1}
+                     + 2C^{(t)}_{i,j-1} - 4C^{(t)}_{ij}
+                     + 2C^{(t)}_{i,j+1}\\
+                   & - C^{(t)}_{i+1,j-1} + 2C^{(t)}_{i+1,j}
+                     - C^{(t)}_{i+1,j+1} \pmod{256}.
+\end{aligned}
+\end{equation}
+Starting again from a single seed of value 1 (white now representing
+zero), we once more see a mandala of intricate complexity and symmetry
+unfold; Figure~\ref{fig:k43} shows generation 250 and a magnified
+detail.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.48\textwidth]{ch4_kernel43_gen250}\;
+\includegraphics[width=0.48\textwidth]{ch4_kernel43_gen250_detail}
+\caption{The signed-kernel CA of Section~\ref{sec:kernel43} at
+generation 250 (left) with a magnified central detail (right).}
+\label{fig:k43}
+\end{figure}
+
+\section{Polynomial Representation of 2-Dimensional Additive CA}
+\label{sec:poly2d}
+
+Two-dimensional additive CA have polynomial representations paralleling
+Section~\ref{sec:poly1d}.  A state --- an $n\times m$ matrix
+$[a_{ij}]$ of integers mod $k$ --- is represented by the two-variable
+characteristic polynomial
+\begin{equation}
+  A(x,y) \;=\; \sum_{i=0}^{n-1}\sum_{j=0}^{m-1} a_{ij}\, x^i y^j ,
+\end{equation}
+an element of the ring
+$\mathbb{Z}_k[x,y]\,/\,(x^n-1,\ y^m-1)$: $x$-exponents are computed
+modulo $n$, $y$-exponents modulo $m$, coefficients modulo $k$.  A
+kernel translates into a polynomial $T(x,y)$ exactly as before; for
+the kernel of Section~\ref{sec:kernel43},
+\begin{equation}
+\begin{aligned}
+  T(x,y) ={}& -x^{-1}y^{-1} + 2x^{-1} - x^{-1}y
+             + 2y^{-1} - 4 + 2y
+             - xy^{-1} + 2x - xy\\
+  \equiv{}& -x^{n-1}y^{m-1} + 2x^{n-1} - x^{n-1}y + 2y^{m-1} - 4 + 2y
+            - xy^{m-1} + 2x - xy .
+\end{aligned}
+\end{equation}
+Multiplying $A$ by $T$ yields the next generation.  Though the algebra
+grows involved in higher dimensions, the polynomial representation is a
+valuable conceptual tool: the superposition principle is simply the
+distributive law of polynomial multiplication over addition.
+Superposition says, in effect, that if you've seen one cell evolve,
+you've seen all possible configurations of cells evolve.
+
+Unfortunately, the most interesting CA are not additive and enjoy no
+such superposition property.
+
+\section{A Famous Non-Additive CA: The Game of Life}
+\label{sec:gameoflife}
+
+Conway's Game of Life is a simple 2-dimensional CA in which each cell
+is either \emph{alive} or \emph{dead}.  Imagining the cells as squares
+of a checkerboard, the neighborhood of a cell consists of its eight
+neighboring squares (left, right, up, down, and the four diagonals).
+The transition rules are:
+\begin{itemize}
+\item a dead cell becomes alive in the next generation exactly when it
+  has exactly three living neighbors (a \emph{birth});
+\item a live cell remains alive exactly when it has two or three
+  living neighbors (otherwise it dies of loneliness or
+  overcrowding).
+\end{itemize}
+
+In the Life figures below, white represents dead cells and live cells
+are color-coded by age: cerise cells are newborn, red very young,
+orange older, yellow older yet, green still older, blue very old, and
+violet ancient --- more than 250 generations old.
+Figure~\ref{fig:life2d} shows evolution from an initially random state;
+after 500 generations the typical menagerie of Life structures has
+emerged: stable \emph{still lifes} (blocks, beehives), oscillating
+\emph{blinkers}, and the occasional \emph{glider} crawling across the
+torus.  Figure~\ref{fig:liferow} shows evolution from a row of 71
+initially live cells; the bilateral symmetry of the initial state is
+preserved forever, and from generation 200 on, gliders can be seen at
+each corner moving outward.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.48\textwidth]{ch4_life_initial}\;
+\includegraphics[width=0.48\textwidth]{ch4_life_gen500}
+\caption{Life from an initially random state with probability of life
+$0.3$ (left); after 500 generations (right), various typical Life
+structures have emerged, age-colored.}
+\label{fig:life2d}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch4_life_row71}
+\caption{Evolution from an initial row of 71 live cells.}
+\label{fig:liferow}
+\end{figure}
+
+\expand{Life went on to a remarkable career.  In 1982 Conway and,
+independently, Gosper's group established that Life is computationally
+universal: glider streams can implement arbitrary logic circuits.
+Self-constructing patterns were eventually built explicitly, notably
+Gemini (2010), a pattern that constructs a complete copy of itself ---
+achieving within Life the self-replication von Neumann originally
+sought from cellular spaces.  Conway himself died in April 2020;
+Life remains his most famous creation, to his occasional chagrin.}
+
+\subsection*{A small bestiary}
+
+The interest of Life lies in its \emph{structures}.  The simplest are
+\emph{still lifes} such as the $2\times2$ block, frozen forever, and
+simple oscillators such as the three-in-a-row \emph{blinker}, which
+flips between horizontal and vertical with period 2.  Far more
+consequential is the \emph{glider} (Figure~\ref{fig:glider}): a
+five-cell pattern that, after four generations, reproduces its own
+shape displaced one cell diagonally.  Gliders are Life's messengers ---
+the moving particles out of which computation is built.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch4_glider}
+\caption{The glider returns to its original shape, translated by one
+cell diagonally, every four generations --- a self-propelled pattern
+moving across the torus.}
+\label{fig:glider}
+\end{figure}
+
+That gliders can be manufactured to order was the key to Life's
+universality.  Bill Gosper's \emph{glider gun}
+(Figure~\ref{fig:gosper}) is a pattern of period 30 that emits a new
+glider every 30 generations, a steady stream marching off toward
+infinity.  Because a gun's population grows without bound, its
+discovery in 1970 settled a \$50 wager posed by Conway --- whether any
+Life pattern could grow forever --- and opened the door to building,
+within Life, the logic gates, wires, and memory of a universal
+computer.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.75\textwidth]{ch4_gosper_gun}
+\caption{Gosper's glider gun after 120 generations: the period-30
+mechanism at upper left has emitted a diagonal stream of four gliders.
+The population grows without bound.}
+\label{fig:gosper}
+\end{figure}
+
+The module \texttt{cadyn.ca2d} ships these patterns as data, ready to
+place on a torus of any size:
+
+\begin{lstlisting}
+from cadyn import ca2d
+
+# a glider in the corner of a 60x60 world, run for 40 generations
+grid = ca2d.pattern_grid(ca2d.GLIDER, 60, top=2, left=2)
+alive, age = ca2d.run_life(grid, 40)
+ca2d.show_life(age)
+
+# the Gosper gun; watch the population climb by 5 cells every 30 gens
+gun = ca2d.pattern_grid(ca2d.GOSPER_GLIDER_GUN, 90, 130, top=5, left=5)
+alive, age = ca2d.run_life(gun, 120)
+\end{lstlisting}
+
+\section{A Non-Additive CA Involving Euler's Totient Function}
+\label{sec:totient}
+
+Our second non-additive 2-dimensional example again takes $k=256$ on a
+$500\times500$ torus, with the Moore neighborhood (the cell and its
+eight nearest neighbors).  The transition rule borrows a function from
+number theory, the Euler totient $\varphi$ (Appendix~\ref{app:totient}):
+\begin{equation}
+  C^{(t+1)}_{ij} \;=\; \sum_{a=-1}^{1}\sum_{b=-1}^{1}
+     \varphi\bigl(C^{(t)}_{i+a,\,j+b}\bigr) \pmod{256},
+\end{equation}
+where we set $\varphi(0)=0$.  Starting from a single seed of value 1
+(white $=$ 0), a mandala of intricate complexity and symmetry once more
+unfolds; Figure~\ref{fig:totient} shows generation 250 with a
+magnified detail.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.48\textwidth]{ch4_totient_gen250}\;
+\includegraphics[width=0.48\textwidth]{ch4_totient_gen250_detail}
+\caption{The Euler-totient rule at generation 250 (left) and a
+magnified central detail (right).}
+\label{fig:totient}
+\end{figure}

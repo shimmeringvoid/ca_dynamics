@@ -1,0 +1,474 @@
+\chapter{1-Dimensional Cellular Automata}
+
+\section{Preliminaries}
+
+As a paradigm for parallel processing, 0-dimensional CA aren't really
+CA at all --- parallel processing is meaningless with only one
+processor.  We need at least one dimension to have a \emph{real} CA;
+this is where most treatises on CA begin, so now we're off to confront
+the real beast.
+
+A one-dimensional lattice is an array of cells distributed along a
+line, each taking a value from a finite set at each tick of the clock.
+We denote the state of the CA at time $t$ by
+\[
+  C^{(t)} = \cdots\,
+  C^{(t)}_{-2}\; C^{(t)}_{-1}\; C^{(t)}_{0}\; C^{(t)}_{1}\;
+  C^{(t)}_{2}\,\cdots.
+\]
+We consider only CA with \emph{periodic boundary conditions}, a
+technique for making infinite arrays effectively finite.  Fixing a
+specific number of cells $n$, the infinite array becomes the finite
+array
+\[
+  C^{(t)} = C^{(t)}_{0}\; C^{(t)}_{1}\; C^{(t)}_{2}\;\cdots\;
+  C^{(t)}_{n-2}\; C^{(t)}_{n-1}.
+\]
+Mentally connect the two ends of this queue to form a circle, so that
+$C^{(t)}_0$ and $C^{(t)}_{n-1}$ are adjacent.  Equivalently, one may
+define initial conditions on cells $0$ through $n-1$ and repeat this
+pattern endlessly to the right and left, so that any two cells whose
+indices are congruent modulo $n$ carry the same value:
+\begin{equation}
+  b \equiv d \pmod n \;\Longrightarrow\; C^{(t)}_b = C^{(t)}_d.
+\end{equation}
+In short, all arithmetic on cell indices is performed modulo $n$.
+
+Although CA neighborhoods may in general be arbitrary, for the CA we
+examine the same relative neighborhood is defined for every cell (such
+CA are called \emph{homogeneous}).  We let $k$ denote the number of
+states per cell, identify the states with $0,1,\dots,k-1$, and perform
+computations on cell values modulo $k$.
+
+Before the examples we discuss a useful representation of a class of CA
+transition rules, borrowed from 1-dimensional digital signal
+processing: \emph{convolution kernels}.
+
+\section{Transition Rules as Convolution Kernels}
+
+In digital signal processing one of the most basic tools, borrowed from
+differential equations, is convolution.  Students of differential
+equations first meet a continuous version of this concept in the
+Laplace transform.  For discrete signals the convolution operation is
+equivalent to applying a CA to the signal: take the signal as the
+initial condition, and let the convolution kernel define the transition
+rule.  The computation a computer performs for one convolution is
+identical to one generation of the corresponding CA.  The difference is
+one of intent: a convolution is applied once (or a few times) to
+produce a filtered output signal, whereas a CA iterates its recursion
+for many generations, even endlessly.
+
+Not all CA can be represented by convolution kernels; those that can
+are called \emph{additive}.  Of this chapter's examples, those of
+Sections 3.2--3.5 are additive, while the sum-of-squares rule
+(Section~\ref{sec:sumsq}) and the 1-dimensional Life
+(Section~\ref{sec:life1d}) are not.
+
+To see how a 1-dimensional kernel is applied, we convolve the kernel
+$[1\;2\;1]$ with the signal $0\;0\;3\;4\;5\;0\;0$.  Position the kernel
+over the beginning of the signal and form the inner product:
+$1\cdot0 + 2\cdot0 + 1\cdot3 = 3$, the first value of the output
+(``filtered'') signal.  Shift the kernel one position right and
+repeat: $1\cdot0+2\cdot3+1\cdot4 = 10$; then
+$1\cdot3+2\cdot4+1\cdot5=16$; then $1\cdot4+2\cdot5+1\cdot0=14$; and
+finally $1\cdot5+2\cdot0+1\cdot0=5$.  The output signal is
+$3\;10\;16\;14\;5$ --- two entries shorter than the input.  Often one
+wants output of the same length; one may \emph{pad} the input with
+zeros at each end, or use \emph{wrap-around}, where the value to the
+left of the leftmost entry is taken to be the rightmost entry and
+conversely --- joining the ends of a string into a loop, i.e.\ imposing
+periodic boundary conditions.
+
+In mathematical notation, the convolution of a signal
+$x_0\, x_1 \dots x_{n-1}$ with a kernel of length $2m+1$,
+\[
+  [\,k_{-m},\ \dots,\ k_{-1},\ k_0,\ k_1,\ \dots,\ k_m\,],
+\]
+under periodic boundary conditions, is
+\begin{equation}
+  y_h \;=\; \sum_{l=-m}^{m} k_l\, x_{(h+l) \bmod n},
+  \label{eq:conv1d}
+\end{equation}
+where $y_0y_1\dots y_{n-1}$ is the output signal; we take the sum
+modulo $k$.  Here we follow signal-processing terminology in calling
+the arrays signals; the same algorithm applies to arrays considered as
+CA states, the input state being one generation and the output the
+next.
+
+With 1-dimensional CA we can see the whole evolution at a glance by
+displaying successive generations as successive rows (or columns) of
+pixels.  For higher-dimensional CA we must resort to other techniques.
+
+\section{Example: $k=5$, $n=21$, kernel $[1\;1\;1]$}
+\label{sec:k5n21}
+
+Here $k=5$ and the number of cells is $n=21$, so each generation is a
+21-component vector $C_0C_1\cdots C_{20}$ with entries from
+$\{0,1,2,3,4\}$ --- each state a 21-digit base-5 number.  The cell ``to
+the left'' of $C_0$ is $C_{20}$, and the cell ``to the right'' of
+$C_{20}$ is $C_0$.  The neighborhood of a cell is the cell itself with
+its left and right neighbors, and the transition rule is the sum of the
+neighborhood, modulo 5:
+\begin{equation}
+  C^{(t+1)}_j = T(C^{(t)}_{j-1}, C^{(t)}_j, C^{(t)}_{j+1})
+  = C^{(t)}_{j-1} + C^{(t)}_j + C^{(t)}_{j+1} \pmod 5,
+\end{equation}
+with subscript arithmetic modulo 21.  We start from the simplest
+initial state, all zeros except a single one:
+
+\begin{center}\ttfamily\small
+\begin{tabular}{ll}
+Gen 0: & 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0\\
+Gen 1: & 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0\\
+Gen 2: & 0 0 0 0 0 0 0 0 1 2 3 2 1 0 0 0 0 0 0 0 0\\
+Gen 3: & 0 0 0 0 0 0 0 1 3 1 2 1 3 1 0 0 0 0 0 0 0\\
+Gen 4: & 0 0 0 0 0 0 1 4 0 1 4 1 0 4 1 0 0 0 0 0 0\\
+Gen 5: & 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0\\
+Gen 6: & 0 0 0 0 1 1 1 0 0 1 1 1 0 0 1 1 1 0 0 0 0\\
+Gen 7: & 0 0 0 1 2 3 2 1 1 2 3 2 1 1 2 3 2 1 0 0 0\\
+Gen 8: & 0 0 1 3 1 2 1 4 4 1 2 1 4 4 1 2 1 3 1 0 0\\
+Gen 9: & 0 1 4 0 1 4 2 4 4 2 4 2 4 4 2 4 1 0 4 1 0\\
+\end{tabular}
+\end{center}
+
+A run of 136 generations produced Figure~\ref{fig:k5n21}, in which the
+first generation is the leftmost column.  Black${}=0$, blue${}=1$,
+green${}=2$, orange${}=3$, red${}=4$.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch3_k5_n21_kernel111}
+\caption{136 generations, one generation per column; time increases
+left to right.}
+\label{fig:k5n21}
+\end{figure}
+
+The transition rule is exactly convolution with the kernel $[1\;1\;1]$:
+the inner product of the kernel with consecutive cells yields the new
+value of the center cell.  With 5 states per cell and 21 cells the
+number of possible CA states is
+\[
+  5^{21} = 476{,}837{,}158{,}203{,}125,
+\]
+which makes it difficult to display the basin-of-attraction field!
+Computer programs have computed basin-of-attraction fields for a great
+many 1-dimensional CA with two states, and an atlas of these has been
+published (Wuensche and Lesser).  These fields are highly reminiscent
+of those of 0-dimensional CA, though more complex.  Most CA exhibit
+decreasing Shannon entropy as time proceeds, as in the 0-dimensional
+case; determinism precludes an entropy increase, since each node of the
+basin-of-attraction field has exactly one out-edge.
+
+The periodicity observed in Figure~\ref{fig:k5n21} is a cycle of length
+124 beginning with the state $\dots0\,0\,1\,1\,1\,0\,0\dots$ of
+generation~1.  Our initial state $\dots0\,0\,1\,0\,0\dots$ is a
+transient (of length one) in the basin of attraction of this attractive
+cycle, so the pattern of generation $t$ first recurs at generation
+$t+124$ (for $t \ge 1$).  Such eventual periodicity is inevitable for
+every CA with finitely many cells.
+
+\section{Examples: $n=512$, kernel $[1\;0\;1]$, various $k$}
+\label{sec:kernel101}
+
+For $k=2$ and $n=512$, each state is a 512-component binary vector ---
+a 512-digit binary number.  The neighborhood of a cell is the pair of
+adjacent cells (the cell itself \emph{not} included), and the rule is
+their sum mod 2, i.e.\ convolution with $[1\;0\;1]$:
+\begin{equation}
+  C^{(t+1)}_j = C^{(t)}_{j-1} + C^{(t)}_{j+1} \pmod k .
+  \label{eq:rule101}
+\end{equation}
+
+Starting from a single seed, 256 generations produce the pattern of
+Figure~\ref{fig:sierp2} --- successive approximations to the fractal
+known as \emph{Sierpi\'nski's gasket} (see
+Appendix~\ref{app:sierpinski}).  The number of possible states of this
+CA is $2^{512} \approx 10^{154}$, considerably greater than the number
+of fundamental particles in the universe; we forgo printing the
+complete basin-of-attraction field.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.8\textwidth]{ch3_sierpinski_k2}
+\caption{Sierpi\'nski gasket generated by the CA with kernel
+$[1\;0\;1]$, $k=2$.}
+\label{fig:sierp2}
+\end{figure}
+
+Interesting patterns are obtained from the same rule
+\eqref{eq:rule101} with more states, taking larger moduli.
+Figure~\ref{fig:sierpk} shows the patterns for
+$k = 3, 4, 5, 15, 17, 29, 30$.  White represents cell value 0; colors
+represent the other $k-1$ states.  Notice that for prime moduli the
+patterns are simpler and more regular, and that the complexity
+increases with the number of factors of the modulus.
+
+\begin{figure}[p]\centering
+\includegraphics[width=0.42\textwidth]{ch3_kernel101_k3}\;
+\includegraphics[width=0.42\textwidth]{ch3_kernel101_k4}\\[0.5ex]
+\includegraphics[width=0.42\textwidth]{ch3_kernel101_k5}\;
+\includegraphics[width=0.42\textwidth]{ch3_kernel101_k15}\\[0.5ex]
+\includegraphics[width=0.42\textwidth]{ch3_kernel101_k17}\;
+\includegraphics[width=0.42\textwidth]{ch3_kernel101_k29}\\[0.5ex]
+\includegraphics[width=0.42\textwidth]{ch3_kernel101_k30}
+\caption{Kernel $[1\;0\;1]$, $n=512$, for (left to right, top to
+bottom) $k = 3, 4, 5, 15, 17, 29, 30$.}
+\label{fig:sierpk}
+\end{figure}
+
+\section{Polynomial Representation of Additive CA}
+\label{sec:poly1d}
+
+Additive CA --- those whose transition rules are convolution kernels
+--- also admit a polynomial representation that facilitates algebraic
+analysis of the dynamics.  Throughout we assume wrap-around periodic
+boundary conditions.
+
+For a 1-dimensional CA with $n$ cells and $k$ states, the state at time
+$t$ can be regarded as the $n$-digit base-$k$ integer
+$A^{(t)} = a^{(t)}_0 a^{(t)}_1 \cdots a^{(t)}_{n-1}$, with
+\emph{characteristic polynomial}
+\begin{equation}
+  A^{(t)}(x) = a^{(t)}_0 + a^{(t)}_1 x + a^{(t)}_2 x^2 + \dots +
+  a^{(t)}_{n-1}x^{n-1}.
+\end{equation}
+The convolution kernel is likewise represented by a polynomial $T(x)$,
+and one generation of evolution is polynomial multiplication:
+\begin{equation}
+  A^{(t+1)}(x) = T(x)\,A^{(t)}(x),
+  \qquad\text{hence}\qquad
+  A^{(t)} = T^{\,t} A^{(0)}.
+\end{equation}
+Coefficient arithmetic is done modulo $k$ and exponent arithmetic
+modulo $n$: we are working in the polynomial ring
+\begin{equation}
+  \mathbb{Z}_k[x]\big/\bigl(x^n - 1\bigr),
+\end{equation}
+``the ring of polynomials in $x$ with mod-$k$ integer coefficients,
+modulo the ideal generated by $x^n-1$.''  In particular $x^n \equiv 1$,
+so $x^{n+1}\equiv x$, etc., and negative powers are meaningful:
+$x^{-1} \equiv x^{n-1}$, $x^{-2} \equiv x^{n-2}$, and so on.
+
+To find the polynomial representing a kernel: the kernel $[1\;2\;3]$
+(coefficients attached to neighbors at offsets $-1, 0, +1$) becomes
+\begin{equation}
+  T(x) = x^{-1}\!\cdot 3 + 2 + 1\cdot x
+       = 2 + x + 3x^{n-1},
+\end{equation}
+and in general the kernel
+$[\,k_{-r}\;\cdots\;k_{-1}\;k_0\;k_1\;\cdots\;k_r\,]$ becomes
+\begin{equation}
+  T(x) \;=\; \sum_{i=-r}^{r} k_i\, x^{-i}
+  \;=\; k_0 + \sum_{i=1}^{r}\bigl(k_{-i}x^{\,i} + k_i x^{\,n-i}\bigr).
+\end{equation}
+(The sign convention --- whether the left neighbor contributes a
+positive or negative power --- is immaterial so long as it is used
+consistently; it amounts to reading the state left-to-right or
+right-to-left.)
+
+A property that greatly simplifies the analysis of additive CA is
+\emph{superposition}: states may be added by adding their
+characteristic polynomials, and
+\begin{equation}
+  T^{\,t}\bigl(A^{(0)}(x) + B^{(0)}(x)\bigr)
+  = T^{\,t}A^{(0)}(x) + T^{\,t}B^{(0)}(x),
+\end{equation}
+an immediate consequence of the distributive law.  Superposition means
+that for additive CA we need only examine the time evolution of a
+\emph{single} cell, since any initial state is a sum of such single
+cells.
+
+For example, the kernel $[1\;0\;1]$ of Section~\ref{sec:kernel101} is
+represented by
+\begin{equation}
+  T(x) = x + x^{n-1} \equiv x^{-1}(x^2+1).
+\end{equation}
+Starting from a single nonzero cell, $A^{(0)}(x) = a\,x^c$
+($0<c<n-1$), we get
+\begin{equation}
+  A^{(t)}(x) = T(x)^t\, a x^c
+  = a\,x^{c-t}\,(x^2+1)^t
+  = \sum_{i=0}^{t}\binom{t}{i} a\, x^{\,c - t + 2i},
+\end{equation}
+exponents mod $n$, coefficients mod $k$.  The binomial coefficients
+appearing here, reduced mod $k$, explain the Sierpi\'nski-gasket
+pattern previously observed for this rule (see
+Appendices~\ref{app:pascal} and \ref{app:sierpinski}).  Since any
+initial state is a sum of such terms, the polynomial representation
+gives, in principle, a closed-form analytic expression for the time
+evolution of an additive CA from any initial state.
+
+\section{Sum of Squares: $n = 200$}
+\label{sec:sumsq}
+
+Now for our first example of a \emph{non-additive} CA, one whose
+transition rule cannot be represented by a convolution kernel.  The
+neighborhood of a cell consists of the cell itself and its two
+immediately adjacent cells, and the rule is
+\begin{equation}
+  C^{(t+1)}_i = \bigl(C^{(t)}_{i-1}\bigr)^2 + 2\bigl(C^{(t)}_i\bigr)^2
+              + \bigl(C^{(t)}_{i+1}\bigr)^2 \pmod k .
+\end{equation}
+Figure~\ref{fig:sumsq} shows 100 generations for several moduli $k$.
+Notice the appearance of the Sierpi\'nski gasket when $k$ is a power of
+2.\footnote{For $k=2^m$ the squaring map interacts with the modulus so
+that the rule behaves, on the relevant residues, like an additive rule;
+for other $k$ the nonlinearity is fully expressed.}
+
+\begin{figure}[p]\centering
+\includegraphics[width=0.42\textwidth]{ch3_sumsq_k7}\;
+\includegraphics[width=0.42\textwidth]{ch3_sumsq_k8}\\[0.5ex]
+\includegraphics[width=0.42\textwidth]{ch3_sumsq_k9}\;
+\includegraphics[width=0.42\textwidth]{ch3_sumsq_k56}\\[0.5ex]
+\includegraphics[width=0.42\textwidth]{ch3_sumsq_k128}
+\caption{The sum-of-squares rule, 100 generations, for moduli
+$k = 7,\ 8=2^3,\ 9,\ 56,\ 128=2^7$.}
+\label{fig:sumsq}
+\end{figure}
+
+\section{Wolfram's Elementary Cellular Automata}
+\label{sec:elementary}
+
+The additive rules above are a small corner of a famous finite family.
+Fix $k=2$ and let each cell's neighborhood be itself together with its
+immediate left and right neighbors.  A transition rule must assign an
+output bit to each of the $2^3 = 8$ possible neighborhood patterns, so
+there are exactly $2^8 = 256$ such rules.  Following Wolfram, we number
+them: writing the eight outputs for the neighborhoods
+$111, 110, 101, \dots, 000$ as a binary string and reading it as a
+number from 0 to 255 gives the \emph{rule number}.  These 256
+\emph{elementary cellular automata} are the simplest nontrivial CA, and
+despite their austerity they already exhibit the full range of
+qualitative behavior catalogued in Chapter~6.
+
+Several are old friends.  The additive rule $[1\;0\;1]$ mod 2 of
+Section~\ref{sec:kernel101} --- the Sierpi\'nski rule --- is exactly
+\textbf{Rule 90}: $C^{(t+1)}_i = C^{(t)}_{i-1} \oplus C^{(t)}_{i+1}$.
+The neighborhood-sum rule $[1\;1\;1]$ mod 2 is \textbf{Rule 150}.  But
+most elementary rules are \emph{not} additive, and two in particular
+have become famous.  \textbf{Rule 30},
+\[
+  C^{(t+1)}_i = C^{(t)}_{i-1} \oplus
+                \bigl(C^{(t)}_i \vee C^{(t)}_{i+1}\bigr),
+\]
+generates from a single seed a pattern so statistically random-looking
+that its center column was used as a random-number generator in early
+versions of \emph{Mathematica}; yet it is completely deterministic and
+its left edge is perfectly regular (Figure~\ref{fig:rule30}).
+\textbf{Rule 110}, discussed further in Chapter~6, supports moving
+particle-like structures that interact in complicated ways and was
+eventually proved capable of universal computation.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.8\textwidth]{ch3_rule30}
+\caption{Rule 30 evolved from a single seed.  The regular left half and
+chaotic right half coexist in a fully deterministic rule; the central
+column passes many tests for randomness.}
+\label{fig:rule30}
+\end{figure}
+
+The module \texttt{cadyn.ca1d} implements all 256 rules through a single
+function:
+
+\begin{lstlisting}
+from cadyn import ca1d
+
+# Rule 90 reproduces the Sierpinski gasket of Section 3.4
+hist = ca1d.run_elementary(ca1d.single_seed(512), rule=90,
+                           generations=255)
+ca1d.plot_spacetime(hist, k=2)
+
+# Rule 30's pseudo-random central column
+hist = ca1d.run_elementary(ca1d.single_seed(601), rule=30,
+                           generations=300)
+bits = hist[:, 300]          # the center column, one bit per generation
+\end{lstlisting}
+
+Figure~\ref{fig:elemclasses} shows one representative of each of
+Wolfram's four qualitative classes.  We return to this classification,
+and to the surprising depth hidden in Rule 110, in Chapter~6.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch3_elementary_classes}
+\caption{Four elementary rules, one per Wolfram class: Rule 250
+(Class~1, uniform growth), Rule 90 (Class~2, self-similar), Rule 30
+(Class~3, chaotic), Rule 110 (Class~4, complex).}
+\label{fig:elemclasses}
+\end{figure}
+
+\section{A Strange Non-Additive Example: $k=256$, $n=512$}
+\label{sec:life1d}
+
+We now examine a rather bizarre non-additive CA.  Although constructed
+with 256 states, its essential behavior requires only 2: the other 254
+states exist primarily to add color, so consider any color ``alive''
+and white ``dead.''  Let $L$ be the number of live cells in the set
+\begin{equation}
+  \bigl\{\, C^{(t)}_{i-4},\ C^{(t)}_{i-3},\ C^{(t)}_{i-1},\
+            C^{(t)}_{i+1},\ C^{(t)}_{i+3},\ C^{(t)}_{i+4} \,\bigr\}.
+\end{equation}
+Then
+\begin{equation}
+  C^{(t+1)}_i =
+  \begin{cases}
+    \text{alive}, & \text{if } L = 3;\\
+    \text{alive}, & \text{if } L = 2 \text{ and } C^{(t)}_i
+                    \text{ is alive};\\
+    \text{dead}, & \text{otherwise}.
+  \end{cases}
+\end{equation}
+This strange rule is a 1-dimensional version of the 2-dimensional CA
+discussed in Section~\ref{sec:gameoflife}.  For the run of
+Figure~\ref{fig:life1d} the initial configuration assigned life and
+death at random with probability of life $1/2$.  Sections of such runs
+look amazingly like elementary-particle tracks in a bubble chamber:
+persistent ``particles'' travel at constant velocity, collide,
+annihilate, and occasionally settle into small cycling structures.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch3_life1d}
+\caption{A 1-dimensional version of the Game of Life; time increases
+left to right.}
+\label{fig:life1d}
+\end{figure}
+
+\section{Entropy in One Dimension}
+\label{sec:entropy1d}
+
+Section~\ref{sec:k5n21} asserted that most CA exhibit decreasing
+Shannon entropy as time proceeds, as in the 0-dimensional case.  We can
+now make that claim quantitative.  A natural extension of the entropy
+of Section~\ref{sec:entropy} to one dimension is the \emph{spatial
+entropy} of a single generation: with $p_t(v)$ the fraction of the $n$
+cells holding value $v$ at time $t$,
+\begin{equation}
+  H_t \;=\; -\sum_{v=0}^{k-1} p_t(v)\,\log_2 p_t(v),
+\end{equation}
+which is $0$ for a uniform state and $\log_2 k$ when all $k$ values
+are equally common across the lattice.\footnote{Spatial entropy
+measures the diversity of cell values in one configuration.  It is the
+simplest of a family of entropies for CA; the \emph{set entropy} over
+the ensemble of reachable configurations, and block entropies over
+words of length $\ell$, refine it and figure prominently in Wolfram's
+analyses.}
+
+Figure~\ref{fig:entropy1d} tracks $H_t$ for four rules of this
+chapter, each started (where meaningful) from the same random initial
+state with $k=8$ and $n=400$.  The freezing rule $f\equiv0$ collapses
+to zero entropy in one step --- the 1-dimensional analogue of the
+zero-entropy example of Section~\ref{sec:entropy}.  The additive rule
+$[1\;1\;1]$ and the non-additive sum-of-squares rule hover near the
+maximum $\log_2 8 = 3$ bits: they scramble values thoroughly enough to
+keep the lattice population near-uniform.  The 1-dimensional Life of
+Section~\ref{sec:life1d} settles between the extremes: its dynamics
+thin the initial random soup down to a sparse population of particles
+against a dead background, and the entropy declines accordingly before
+leveling off.  Determinism forbids the \emph{basin-of-attraction}
+entropy of the ensemble from ever increasing; the spatial entropy of a
+typical trajectory usually (though not invariably) declines as
+structure emerges.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.85\textwidth]{ch3_entropy_comparison}
+\caption{Spatial entropy versus time for four rules with $k=8$,
+$n=400$, from a random initial state.}
+\label{fig:entropy1d}
+\end{figure}

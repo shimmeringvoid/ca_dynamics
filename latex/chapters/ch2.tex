@@ -1,0 +1,340 @@
+\chapter{Zero-Dimensional Cellular Automata}
+
+\section{Preliminaries}
+
+A two-dimensional lattice may be thought of as the points of the plane
+with integer coordinates, and a one-dimensional lattice as the integer
+points of the real line.  A zero-dimensional lattice, then, consists of
+a single point --- not much of a lattice at all.  The parallelism
+inherent in higher-dimensional CA is totally lacking, so one might well
+suppose the 0-dimensional case trivial and devoid of interest.  But no
+one would call the concept of \emph{function} trivial, and discrete
+functions of one variable, regarded as dynamical systems, \emph{are}
+0-dimensional CA.
+
+We now take a little detour through the land of finite dynamical
+systems, illustrating important concepts these simple systems share
+with far more complex ones, from higher-dimensional CA to systems of
+differential equations.  To fit the CA framework we must specify a
+lattice, the allowable cell states, neighborhoods, transition rules,
+and an initial state.  The lattice is a single cell; the allowable
+states are the integers modulo some fixed integer $n$; the neighborhood
+of our lonely cell is the cell itself; the transition rule is an
+arithmetic function $f$ whose output we reduce modulo $n$; and the
+initial state is a single integer $X_0$.  There are only $n$ possible
+initial states: $0,1,\dots,n-1$.  Letting the dynamics unfold, we
+iterate the recursion
+\begin{equation}
+  X_{k+1} = f(X_k) \pmod n,
+\end{equation}
+obtaining the sequence
+\[
+  X_0,\, X_1,\, X_2,\, \dots,\, X_M,\, \dots,\, X_N,\, \dots\;.
+\]
+
+This sequence is termed a \emph{trajectory} --- the same word used for
+the path traversed by an initial point under the influence of a
+differential equation.  Here the trajectory is a discrete sequence
+rather than a continuous path, and a recursive arithmetic function
+replaces the differential equation (an ``infinitesimal recursion
+rule'').  The near-identical vocabulary reflects the closely analogous
+relationship of the two realms.
+
+Since each $X_i$ can take only one of $n$ values, at some point ---
+say at $X_M$ --- we must encounter a value for the second time; from
+then on we repeat the sequence that followed its first occurrence.  We
+have entered a \emph{cycle}.  The portion of a trajectory preceding its
+entry into a cycle is a \emph{transient}, and a cycle possessing
+transients is an \emph{attractive cycle}.  The analogous concept for
+differential equations is the \emph{limit cycle}.
+
+Trajectories give a local way of understanding dynamics.  For a global,
+qualitative understanding of differential equations,
+Poincar\'e introduced the \emph{state space} (or \emph{phase space});
+the analogous concept in the discrete realm is the \emph{basin of
+attraction field}.  These are easy to construct in the 0-dimensional
+case and they illustrate the properties of basin-of-attraction fields
+in general.
+
+\section{Example: $x^2+1 \pmod{17}$}
+\label{sec:mod17}
+
+For our first example let $n=17$ and define the recursion function by
+\begin{equation}
+  f(x) = x^2 + 1 \pmod{17}.
+\end{equation}
+Starting with $x=0$ we get the trajectory
+$0, 1, 2, 5, 9, 14, 10, 16, 2, \dots$.  Here $2$ has appeared a second
+time, and so begins the attractive cycle $2, 5, 9, 14, 10, 16$.  The
+module \texttt{cadyn.fds} computes the basin-of-attraction field shown
+in Figure~\ref{fig:mod17}.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.8\textwidth]{ch2_basin_mod17}
+\caption{Basin of attraction field for $f(x)=x^2+1 \pmod{17}$.  Cycle
+edges are red, transient edges green.}
+\label{fig:mod17}
+\end{figure}
+
+Notice the attractive cycle and the incoming transient branches.  For
+this function there is only one attractive cycle; ordinarily there are
+several, and the basin-of-attraction field consists of the entire
+collection of cycles with their associated transients.  Each node has
+exactly one outgoing edge: the system is \emph{deterministic}.  Some
+nodes have more than one incoming edge: the system is
+\emph{irreversible}, and the entropy of the system tends to decrease as
+it evolves.  CA of all dimensions share these qualities, and the
+tendency of entropy to decrease in CA is no doubt partly responsible
+for the emergent behavior so often evident in such systems.
+
+Notice too that the two predecessors of any node with two predecessors
+always sum to $17$.  This follows from the algebraic identity
+$x^2 = (-x)^2$ together with the modular-arithmetic fact
+$-x \equiv n-x \pmod n$: hence
+\[
+  x^2 \equiv (n-x)^2, \qquad x^2+1 \equiv (n-x)^2+1,
+\]
+and so $f(x) \equiv f(n-x) \pmod n$ for $0 \le x \le n-1$.  And indeed
+$x + (n-x) = n$.  Here $n=17$, but the same holds for the later
+examples using this function; the reader should verify it in
+Sections~\ref{sec:mod37} and~\ref{sec:mod221}.
+
+The outermost states in Figure~\ref{fig:mod17}, with values
+$4, 6, 7, 8, 11, 12, 13, 15$, have no predecessor states: after one
+generation the CA is guaranteed not to occupy any of them.  Such
+outlying states are known as \emph{Garden of Eden} states.
+
+Before further examples we digress to define the important concept of
+entropy.  Entropy is not separate from information, in precisely the
+way the concept of a half-empty glass is not separable from that of a
+half-full one; out of this concept grows the entire field of
+information theory.
+
+\section{Shannon's Entropy}
+\label{sec:entropy}
+
+Entropy for a 0-dimensional CA with $n$ states may be defined via
+Shannon's formula
+\begin{equation}
+  H_t \;=\; -\sum_{k=0}^{n-1} p_t(k)\,\log_2 p_t(k),
+\end{equation}
+where $p_t(k)$ is the probability that the system has value $k$ after
+$t$ time steps from a uniformly random initial value, and where we
+agree that $0\log 0 = 0$.  Using base-2 logarithms measures entropy in
+\emph{bits}.  $H$ measures the system's basic information potential.
+
+Two extreme cases illuminate the formula.  First, consider a CA in
+which every initial state evolves to $0$ (e.g.\ $f(x)=0$).  For $t$
+large enough, $p_t(0)=1$ and all other probabilities vanish, so the sum
+reduces to $\log_2 1 = 0$: zero entropy.  Entropy connotes randomness
+and uncertainty, and here we are \emph{a priori} certain of the
+outcome.  Second, consider a CA in which all states remain equally
+likely for all time (e.g.\ $f(x)=x+1$).  Then $p_t(k)=1/n$ for all $k$,
+and the formula gives
+\begin{equation}
+  H = -\log_2 \tfrac1n = \log_2 n,
+\end{equation}
+the maximum entropy possible for a 0-dimensional CA with $n$ states
+(Table~\ref{tab:maxent}).  Note that $H$, rounded up, is the number of
+binary digits needed to represent $n$.
+
+\begin{table}[htbp]\centering
+\begin{tabular}{l|ccccccccc}
+\toprule
+$n$ & 1 & 2 & 5 & 10 & 15 & 20 & 30 & 50 & 100\\
+\midrule
+$S=\log_2 n$ & 0 & 1 & 2.32 & 3.32 & 3.91 & 4.32 & 4.91 & 5.64 & 6.64\\
+\bottomrule
+\end{tabular}
+\caption{Maximum entropy $S$ as a function of the number of cell
+states $n$.}
+\label{tab:maxent}
+\end{table}
+
+To compute $p_t(k)$, the software counts the number of initial values
+that end up with value $k$ after $t$ iterations; call this
+$\mathrm{Num}(k,t)$.  Since there are $n$ equally likely initial
+states,
+\begin{equation}
+  p_t(k) = \frac{\mathrm{Num}(k,t)}{n}.
+\end{equation}
+$H_0$ is thus always the maximal entropy of the system, and once every
+value has settled into a cycle the entropy remains constant at the
+system's minimum.\footnote{Strictly, once all transients have died out
+the multiset of occupied states is permuted by $f$, so the entropy is
+exactly constant from then on.}  In general, the smaller the entropy,
+the greater one's \emph{a priori} information about the state of the
+system: entropy measures one's uncertainty about a system's state.
+
+\section{Example: $x^2+1 \pmod{37}$}
+\label{sec:mod37}
+
+Figure~\ref{fig:mod37} depicts the basin-of-attraction field for
+\begin{equation}
+  f(x) = x^2 + 1 \pmod{37}.
+\end{equation}
+There are three separate attractive cycles: two of length~1 (the fixed
+points $27$ and $11$) and one of length~2 (the cycle $8, 28$).
+Attractive 1-cycles are usually just called \emph{attractors} or
+\emph{fixed points}.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.9\textwidth]{ch2_basin_mod37}
+\caption{Basin of attraction field for $f(x)=x^2+1\pmod{37}$: the
+attractor 27 with a basin of 8 states, the 2-cycle $\{8,28\}$ with a
+basin of 6 states, and the attractor 11 with a basin of 23 states.}
+\label{fig:mod37}
+\end{figure}
+
+Since the system eventually evolves to one of four values, the entropy
+should be relatively small after six iterations.
+Figure~\ref{fig:entropy37} graphs the entropy $H$ as a function of the
+number of iterations.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.65\textwidth]{ch2_entropy_mod37}
+\caption{Entropy as a function of time for $f(x)=x^2+1 \pmod{37}$.}
+\label{fig:entropy37}
+\end{figure}
+
+The system ends up at one of its attractors ($27$ or $11$) or on its
+2-cycle $(8,28)$ after 6 time steps, so thereafter it occupies one of
+these 4 values.  A uniformly random system with 4 states has entropy
+$\log_2 4 = 2$, rather larger than this system's minimum entropy,
+$1.478$.  Our smaller final entropy is due mostly to the large number
+of transients feeding attractor 11: with 23 states in its basin, the
+probability of ending at 11 is $23/37 = 0.621\ldots$, so most of the
+time the system ends there.  This additional information means less
+uncertainty than in the uniform case, where the probability of ending
+at 11 would be only $1/4 = 0.25$; hence the lower entropy.  The greater
+one's \emph{a priori} information about a system, the less one's
+uncertainty about its states, and the lower its entropy.
+
+\section{Example: $x^2+1 \pmod{221}$}
+\label{sec:mod221}
+
+Figure~\ref{fig:mod221} depicts the basin-of-attraction field for
+\begin{equation}
+  f(x) = x^2 + 1 \pmod{221}.
+\end{equation}
+In this case there are four separate attractive cycles: two of
+length~12 and two of length~6, accounting for the 36 cyclic states.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{ch2_basin_mod221}
+\caption{Basin of attraction field for $f(x)=x^2+1\pmod{221}$: two
+attractive 12-cycles and two attractive 6-cycles, with their
+transients.  Note the topological repetition between basins of equal
+cycle length.}
+\label{fig:mod221}
+\end{figure}
+
+The topological repetition observed among basins of attraction is very
+common for large moduli, and the redundancy becomes even more
+pronounced for CA on higher-dimensional lattices.\footnote{For this
+example the repetition has a tidy explanation: $221 = 13\cdot17$, and
+by the Chinese Remainder Theorem the system is the direct product of
+$x^2+1$ mod 13 and mod 17, whose cycle structures combine to produce
+the paired 6- and 12-cycles.}
+Figure~\ref{fig:entropy221} shows the entropy graph for this system.
+The outcome of many iterations is far less certain than for the system
+of Section~\ref{sec:mod37}, so the minimum entropy is higher
+($H_{\min}=4.983$ versus $1.478$).
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.65\textwidth]{ch2_entropy_mod221}
+\caption{Entropy as a function of time for $f(x)=x^2+1 \pmod{221}$.}
+\label{fig:entropy221}
+\end{figure}
+
+The system reaches one of its 4 cycles after 3 time steps and is
+thereafter confined to the 36 cyclic values.  A uniformly random system
+with 36 states has entropy $\log_2 36 = 5.170$, very close to this
+system's minimum entropy.  Our slightly smaller final entropy is due to
+the greater number of transients associated with the 12-cycles, which
+makes ending in a 12-cycle more probable than ending in a 6-cycle; this
+extra information lowers the entropy below that of a uniformly random
+system.
+
+\section{Example: $x^3 + 2x^2 + 3x + 2 \pmod{28}$}
+\label{sec:cubic}
+
+Figure~\ref{fig:cubic} shows the basin-of-attraction field for
+\begin{equation}
+  f(x) = x^3 + 2x^2 + 3x + 2 \pmod{28},
+\end{equation}
+whose basin-of-attraction field comprises two basins: an attractive
+6-cycle and an attractive 2-cycle, each with associated transients.
+Figure~\ref{fig:entropycubic} shows the entropy graph.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.8\textwidth]{ch2_basin_cubic_mod28}
+\caption{Basin of attraction field for
+$f(x)=x^3+2x^2+3x+2 \pmod{28}$: an attractive 6-cycle and an
+attractive 2-cycle.}
+\label{fig:cubic}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.65\textwidth]{ch2_entropy_cubic_mod28}
+\caption{Entropy as a function of time for
+$f(x)=x^3+2x^2+3x+2 \pmod{28}$.}
+\label{fig:entropycubic}
+\end{figure}
+
+\section{Ulam's Function}
+\label{sec:ulam}
+
+In the late 1940s Stanis\l{}aw Ulam introduced the $3N+1$ problem to
+the Los Alamos scientific community (though he didn't invent it), which
+was beginning to play with the very first digital computers.  The
+problem involves a simple recursively defined arithmetic function that
+to this day holds unfathomed mysteries:
+\begin{equation}
+  f(n) =
+  \begin{cases}
+    n/2, & \text{if } n \text{ even};\\
+    3n+1, & \text{if } n \text{ odd}.
+  \end{cases}
+\end{equation}
+The observation Ulam circulated is that no matter what positive integer
+one starts with, iterating $f$ appears always to arrive at the
+attractive cycle $4\to2\to1$.  Nobody knows whether \emph{all} positive
+integers belong to this cycle's basin of attraction.
+
+\expand{The conjecture (also attached to the names Collatz, Kakutani,
+Syracuse, and others) remains open.  The first edition noted
+verification for all $n < 10^{12}$; as of the mid-2020s it has been
+verified for all $n < 2^{71} \approx 2.36\times10^{21}$ (Barina 2020
+and subsequent distributed computation), and Terence Tao proved in 2019
+that ``almost all'' orbits attain almost bounded values --- yet a full
+proof remains out of reach, vindicating Erd\H{o}s's judgment that
+``mathematics is not yet ripe for such problems.''}
+
+If zero is allowed as an argument, it becomes another attractor.  The
+module \texttt{cadyn.fds} has this function built in, modulo arbitrary
+values, and when computed with modular arithmetic zero has its own
+basin of attraction.  Figure~\ref{fig:ulam} shows the computation
+modulo 20 and modulo 40, and Figure~\ref{fig:ulam47} the computation
+modulo 47.  Notice the surprising occurrence
+of yet another attractor, $23$, in the modulus-47 case.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.88\textwidth]{ch2_basin_ulam_mod20}\\[1.5ex]
+\includegraphics[width=0.88\textwidth]{ch2_basin_ulam_mod40}
+\caption{Ulam's function modulo 20 (top) and 40 (bottom).}
+\label{fig:ulam}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.95\textwidth]{ch2_basin_ulam_mod47}
+\caption{Ulam's function modulo 47, with the surprise attractor
+at 23.}
+\label{fig:ulam47}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.62\textwidth]{ch2_entropy_ulam_mod47}
+\caption{Entropy history for Ulam's function modulo 47.}
+\label{fig:ulam-entropy}
+\end{figure}

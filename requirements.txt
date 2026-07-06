@@ -1,0 +1,10 @@
+# Runtime dependencies for the cadyn package and the chapter notebooks.
+# For development (tests) or building the notebooks from source, see the
+# extras in pyproject.toml:  pip install -e ".[dev,notebooks]"
+numpy>=1.22
+scipy>=1.8
+matplotlib>=3.5
+networkx>=2.6
+
+# needed to run / re-execute the notebooks
+jupyterlab>=4

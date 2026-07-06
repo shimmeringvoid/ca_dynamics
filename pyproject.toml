@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadyn"
+version = "1.0.0"
+description = "Cellular Automata Dynamics — Python re-implementation of the 1997 book's software"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Rafael Espericueta" }]
+license = "MIT"
+keywords = ["cellular automata", "dynamical systems", "game of life",
+            "fractals", "complexity"]
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "matplotlib>=3.5",
+    "networkx>=2.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+notebooks = ["jupyterlab>=4", "nbformat>=5", "nbclient>=0.7"]
+
+[tool.setuptools]
+packages = ["cadyn"]

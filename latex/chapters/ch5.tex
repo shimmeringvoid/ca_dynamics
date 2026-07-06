@@ -1,0 +1,175 @@
+\chapter{Ecosystem Modeling Using Cellular Automata}
+\label{ch:ecosystem}
+
+\section{CAecosystem}
+
+The module \texttt{cadyn.ecosystem} illustrates how CA can create
+simple, intuitive models of complex real-world phenomena that help
+illuminate the underlying principles.  This ecosystem simulator lets
+the user set the parameters of an artificial ecosystem with three
+interdependent species --- \emph{plants}, \emph{prey}, and
+\emph{predators} --- then set the artificial universe in motion,
+observe the ensuing dynamics, and display the population data in
+various ways.  These created worlds have a toroidal topology: a critter
+creeping off the bottom of the display reappears at the top, and one
+crawling off the right enters on the left.  So don't worry --- these
+critters can't escape and infest your home!
+
+For a first run we use a $500\times500$ cell space with the initial
+probability of a cell being prey set to $0.212$ and of being a predator
+set to $0.029$; other parameters keep their default settings.
+Figure~\ref{fig:eco-init} shows the initial state
+(green $=$ plants, yellow $=$ prey, red $=$ predators), and
+Figure~\ref{fig:eco-2000} shows the state after 2000 generations
+(purple cells are devoid of life).
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.7\textwidth]{ch5_eco_initial}
+\caption{Initial state of the ecosystem (detail).  Green $=$ plants,
+yellow $=$ prey, red $=$ predators.}
+\label{fig:eco-init}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.7\textwidth]{ch5_eco_gen2000}
+\caption{The same ecosystem 2000 generations later (detail); purple
+cells are devoid of life.}
+\label{fig:eco-2000}
+\end{figure}
+
+Figure~\ref{fig:eco-pops} graphs the populations against time, up to
+generation 2000.  Without the regulating influence of the predators,
+the prey would eat all the plants and then starve.  The three
+populations are graphed on a normalized scale for good resolution on a
+shared axis.  The predator curve (red) and the prey curve (yellow) show
+the out-of-phase oscillation typical of predator/prey systems: abundant
+prey mean easy hunting, hence many predator births; the swelling
+predator population then drives the prey into decline; scarce prey then
+starve the predators; and with predators scarce, the prey rebound,
+restarting the cycle.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.9\textwidth]{ch5_eco_populations}
+\caption{Normalized population curves; the horizontal axis is the
+generation number.}
+\label{fig:eco-pops}
+\end{figure}
+
+The cycle is less obvious between prey and plants (relative to which the
+prey are the predators), because of the rapid growth of plants in this
+simulation; the plant graph is almost the negative of the prey graph
+(roughly $180^\circ$ out of phase).  Notice that the initially large
+oscillations (\emph{transients}) settle to relatively stable
+amplitudes for all species, and that the predators and plants stand in
+a curiously symbiotic relationship in this ecosystem.
+
+Another view of the same information is the 3-dimensional \emph{phase
+portrait}: at each sampled time we plot a point whose coordinates are
+the three population counts (Figure~\ref{fig:eco-phase}).  Poincar\'e
+introduced this type of graph in his study of the global dynamics of
+differential equations.  The oscillation of Figure~\ref{fig:eco-pops}
+appears here as an almost circular orbiting of the curve about an
+equilibrium point, and the damping of the oscillations appears as a
+tightening of the spiral toward that point.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.7\textwidth]{ch5_eco_phase}
+\caption{A 3-dimensional phase portrait representing the same data as
+Figure~\ref{fig:eco-pops}: plants ($x$), prey ($y$), predators
+($z$).}
+\label{fig:eco-phase}
+\end{figure}
+
+This same qualitative behavior appears in solutions of the
+Volterra--Lotka differential equations traditionally used to model
+ecosystem population dynamics.  A little experimentation reveals that an
+imprudent choice of parameters produces transients so wild that all
+animal life (often all plant life too) goes extinct.
+Figure~\ref{fig:extinction} shows such a run: with voracious,
+short-lived predators (high predation efficiency, high death rate), the
+first predator boom overshoots so violently that it eats the prey
+faster than the prey can be replenished, and having exhausted its food
+supply the predator population crashes to zero.  Once an animal species
+is gone it cannot return --- there is no spontaneous generation in this
+model --- so the extinction is permanent.  Even in the
+differential-equation models the equilibrium point is virtually
+impossible to attain, since it would almost always entail fractions of
+an animal being alive --- one of the absurdities of using continuous
+models for discrete phenomena.  The difficulty is even more acute in
+discrete models, so oscillatory behavior is unavoidable.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.85\textwidth]{ch5_extinction}
+\caption{An imprudent parameter choice: with predators too efficient
+and too short-lived, the first boom-and-bust transient drives the
+predators (and here the prey) extinct within the first hundred
+generations.}
+\label{fig:extinction}
+\end{figure}
+
+Which parameter regimes permit long-term coexistence, and which lead to
+collapse?  Because the model is stochastic and cheap to run, we can map
+this out directly rather than analyze it.  Figure~\ref{fig:survival}
+sweeps two predator parameters --- predation efficiency
+$b_{\mathrm{pred}}$ and death rate $d_{\mathrm{pred}}$ --- and records
+the fraction of runs in which all three species survive 400
+generations.  A broad green region of coexistence separates two modes
+of failure: predators too feeble or too mortal (lower right) starve and
+die out, while predators too voracious and too persistent (upper left)
+strip the ecosystem in a single overshoot.  Persistent predator/prey
+coexistence is not the generic outcome but a balance struck within a
+bounded region of parameter space --- the discrete, spatial echo of the
+delicate neutral cycles of the Volterra--Lotka equations.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.75\textwidth]{ch5_survival_sweep}
+\caption{Survival phase diagram: the fraction of runs (of a small
+ensemble) in which all species persist for 400 generations, as the
+predator's predation efficiency and death rate are varied.  Green marks
+coexistence; red marks extinction.}
+\label{fig:survival}
+\end{figure}
+
+One reason for the initial transients is that the initial spatial
+arrangement of cell states is random, whereas the steady-state
+distribution is far from random; the transient period involves the
+spatial drift from the random initial configuration toward a more
+optimal one (compare Figures~\ref{fig:eco-init}
+and~\ref{fig:eco-2000}).  Another reason, visible in the phase
+portrait, is that our initial state was a bit too lush with plant life,
+placing the initial point off to one side of the main coil of the
+trajectory.
+
+\expand{This CA ecosystem is a spatial, individual-based analogue of
+the Volterra--Lotka equations, and it illustrates a lesson that the
+intervening decades have underscored: spatial structure changes
+everything.  Where the mean-field differential equations predict either
+neutral cycles or a single damped approach to equilibrium, spatially
+extended predator/prey CA generate travelling waves, spiral patterns,
+and persistent noisy oscillations sustained by local
+desynchronization --- dynamics now central to theoretical ecology and
+epidemiology.  The same mechanism drives spiral waves in the
+Belousov--Zhabotinsky reaction and in models of cardiac fibrillation
+mentioned in Chapter~1.  This ecosystem is also the springboard for
+Chapter~\ref{ch:evolution}, which gives its creatures the ability to
+\emph{move} and equips them with competing perceptual \emph{strategies},
+turning the simulation into an evolutionary-game laboratory.}
+
+The original edition tracked the same ecosystem out to 11{,}200
+generations; the population curves continue their noisy, bounded
+oscillation indefinitely, and the actual state continues to resemble
+Figure~\ref{fig:eco-2000}.  The reader is
+encouraged to reproduce such long runs --- now a matter of seconds
+rather than an overnight computation --- and to rotate the phase
+portrait interactively:
+
+\begin{lstlisting}
+from cadyn.ecosystem import Ecosystem
+import numpy as np
+
+eco = Ecosystem(n=200, p_prey=0.212, p_pred=0.029,
+                rng=np.random.default_rng(11))
+eco.run(11_200)
+eco.plot_populations(sample_every=8)   # long-run population curves
+ax = eco.plot_phase_portrait()         # rotate with ax.view_init(...)
+\end{lstlisting}
