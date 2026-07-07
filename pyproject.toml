@@ -21,7 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
-notebooks = ["jupyterlab>=4", "nbformat>=5", "nbclient>=0.7"]
+notebooks = ["jupyterlab>=4", "nbformat>=5", "nbclient>=0.7", "nbconvert>=7"]
 
 [tool.setuptools]
 packages = ["cadyn"]
