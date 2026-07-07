@@ -146,6 +146,14 @@ def build():
      notebook &mdash; read the explanation, then run and modify the code.
      Everything is powered by the <a href="{GH}"><code>cadyn</code></a>
      Python package.</p>
+  <p style="margin:1.5rem 0;">
+    <a href="cellular_automata_dynamics.pdf"
+       style="display:inline-block; background:var(--link); color:#fff;
+              padding:.6rem 1.1rem; border-radius:8px; font-weight:600;">
+      &#128214; Download the full book (PDF)</a>
+    <span style="color:#777; margin-left:.6rem;">complete text, appendices,
+      and bibliography</span>
+  </p>
   <ul class="card-list">
   {cards}
   </ul>
@@ -157,9 +165,17 @@ def build():
 </body></html>"""
     (OUT / "index.html").write_text(index, encoding="utf-8")
     print("  wrote index.html")
+
+    # copy the full typeset book into the site so it can be downloaded
+    import shutil
+    pdf_src = REPO / "latex" / "book.pdf"
+    if pdf_src.exists():
+        shutil.copy2(pdf_src, OUT / "cellular_automata_dynamics.pdf")
+        print("  copied book.pdf -> site/cellular_automata_dynamics.pdf")
+
     # .nojekyll tells GitHub Pages to serve the files as-is (no Jekyll pass)
     (OUT / ".nojekyll").write_text("", encoding="utf-8")
-    print(f"\nSite built in {OUT}/  ({len(CHAPTERS)} chapters + index)")
+    print("  wrote index.html")
 
 
 def serve():
